@@ -25,6 +25,7 @@ export default function Home() {
                         <Link to="/column-engine" className="hover:text-blue-200">📊 Column Engine</Link>
             <Link to="/skip-tracker" className="hover:text-blue-200">⏰ Skip Tracker</Link>
             <Link to="/pick3-scoring" className="hover:text-blue-200">🎯 Scoring Engine</Link>
+            <Link to="/pick3-backtesting" className="hover:text-blue-200">🔬 Backtesting</Link>
             <Link to="/dashboard" className="hover:text-blue-200">🎰 Dashboard</Link>
             <Link to="/predictions" className="hover:text-blue-200">🎯 Predictions</Link>
           </div>

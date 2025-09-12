@@ -17,5 +17,6 @@ export default [
   route("pick3-pairs", "routes/pick3-pairs.tsx"),
   route("column-engine", "routes/column-engine.tsx"),
   route("skip-tracker", "routes/skip-tracker.tsx"),
-  route("pick3-scoring", "routes/pick3-scoring.tsx")
+  route("pick3-scoring", "routes/pick3-scoring.tsx"),
+  route("pick3-backtesting", "routes/pick3-backtesting.tsx")
 ] satisfies RouteConfig;
