@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Pick3Analyzer } from '../../utils/pick3Analyzer';
-import './Pick3ScoringEngine.css';
+import { pick3Analyzer } from '../utils/pick3Analyzer';
 
 interface ScoringFactor {
   name: string;
@@ -19,20 +18,13 @@ interface CombinationScore {
   riskLevel: 'low' | 'medium' | 'high';
 }
 
-interface Pick3ScoringEngineProps {
-  historicalDraws?: string[];
-  targetDraws?: number;
-}
-
-const Pick3ScoringEngine: React.FC<Pick3ScoringEngineProps> = ({
-  historicalDraws = [],
-  targetDraws = 10
-}) => {
-  const [analyzer] = useState(() => new Pick3Analyzer());
+const LiveScoring: React.FC = () => {
+  const analyzer = pick3Analyzer;
   const [topCombinations, setTopCombinations] = useState<CombinationScore[]>([]);
   const [selectedCombination, setSelectedCombination] = useState<CombinationScore | null>(null);
   const [loading, setLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [targetDraws, setTargetDraws] = useState(10);
 
   // Scoring factors with their weights
   const SCORING_FACTORS = [
@@ -47,11 +39,9 @@ const Pick3ScoringEngine: React.FC<Pick3ScoringEngineProps> = ({
 
   // Mock scoring functions (would integrate with actual components)
   const calculateColumnScore = (combo: string): number => {
-    // Simulate column engine prediction score
     const digits = combo.split('').map(Number);
     let score = 0;
     digits.forEach((digit, pos) => {
-      // Higher score for digits in optimal column positions
       const positionBonus = [0.8, 0.9, 0.7][pos] || 0.5;
       score += (digit / 9) * positionBonus;
     });
@@ -59,27 +49,23 @@ const Pick3ScoringEngine: React.FC<Pick3ScoringEngineProps> = ({
   };
 
   const calculateSkipScore = (combo: string): number => {
-    // Simulate skip tracker analysis
     const digits = combo.split('').map(Number);
     let score = 0;
     digits.forEach(digit => {
-      // Prefer digits that are "due" (higher skip counts)
-      const skipFactor = Math.random() * 0.5 + 0.5; // Mock skip analysis
+      const skipFactor = Math.random() * 0.5 + 0.5;
       score += skipFactor;
     });
     return Math.min(score / 3, 1);
   };
 
   const calculatePairScore = (combo: string): number => {
-    // Simulate pairs analysis coverage
     const pairs = [
-      combo.slice(0, 2), // Front pair
-      combo.slice(1, 3), // Back pair
-      combo[0] + combo[2]  // Split pair
+      combo.slice(0, 2),
+      combo.slice(1, 3),
+      combo[0] + combo[2]
     ];
     let score = 0;
     pairs.forEach(pair => {
-      // Higher score for pairs that appear frequently
       const pairFrequency = Math.random() * 0.7 + 0.3;
       score += pairFrequency;
     });
@@ -87,49 +73,41 @@ const Pick3ScoringEngine: React.FC<Pick3ScoringEngineProps> = ({
   };
 
   const calculatePatternScore = (combo: string): number => {
-    // Simulate Inspector3 pattern matching
     const digits = combo.split('').map(Number);
     const sum = digits.reduce((a, b) => a + b, 0);
     const isEven = digits.filter(d => d % 2 === 0).length;
     const isHigh = digits.filter(d => d >= 5).length;
 
-    // Score based on pattern consistency
     let patternScore = 0;
-    if (sum >= 10 && sum <= 16) patternScore += 0.4; // Good sum range
-    if (isEven >= 1 && isEven <= 2) patternScore += 0.3; // Balanced even/odd
-    if (isHigh >= 1 && isHigh <= 2) patternScore += 0.3; // Balanced high/low
-
+    if (sum >= 10 && sum <= 16) patternScore += 0.4;
+    if (isEven >= 1 && isEven <= 2) patternScore += 0.3;
+    if (isHigh >= 1 && isHigh <= 2) patternScore += 0.3;
     return Math.min(patternScore, 1);
   };
 
   const calculateSumScore = (combo: string): number => {
     const digits = combo.split('').map(Number);
     const sum = digits.reduce((a, b) => a + b, 0);
-    // Optimal sum ranges: 10-16 for Pick 3
     if (sum >= 10 && sum <= 16) return 1.0;
     if (sum >= 7 && sum <= 19) return 0.7;
     return 0.3;
   };
 
   const calculateVTracScore = (combo: string): number => {
-    // VTrac scoring based on pattern consistency
     const digits = combo.split('').map(Number);
     const vtracSum = digits.map(d => d + 5).reduce((a, b) => a + b, 0);
-    // Prefer VTrac sums in optimal ranges
     if (vtracSum >= 15 && vtracSum <= 21) return 1.0;
     if (vtracSum >= 12 && vtracSum <= 24) return 0.7;
     return 0.4;
   };
 
   const calculateDeflateScore = (combo: string): number => {
-    // Simulate deflate filter efficiency
     const digits = combo.split('').map(Number);
     const uniqueDigits = new Set(digits).size;
-    // Prefer combinations that pass multiple filters
-    let filterScore = 0.5; // Base score
-    if (uniqueDigits >= 2) filterScore += 0.2; // Passes duplicate filter
-    if (digits.some(d => d >= 5)) filterScore += 0.15; // Has high digits
-    if (digits.some(d => d <= 4)) filterScore += 0.15; // Has low digits
+    let filterScore = 0.5;
+    if (uniqueDigits >= 2) filterScore += 0.2;
+    if (digits.some(d => d >= 5)) filterScore += 0.15;
+    if (digits.some(d => d <= 4)) filterScore += 0.15;
     return Math.min(filterScore, 1);
   };
 
@@ -187,7 +165,7 @@ const Pick3ScoringEngine: React.FC<Pick3ScoringEngineProps> = ({
     ];
 
     const totalScore = factors.reduce((sum, factor) => sum + (factor.score * factor.weight), 0);
-    const confidence = Math.min(totalScore * 100, 95); // Max 95% confidence
+    const confidence = Math.min(totalScore * 100, 95);
 
     let riskLevel: 'low' | 'medium' | 'high' = 'medium';
     if (totalScore >= 0.7) riskLevel = 'low';
@@ -197,7 +175,7 @@ const Pick3ScoringEngine: React.FC<Pick3ScoringEngineProps> = ({
       combination: combo,
       totalScore,
       factors,
-      rank: 0, // Will be set after sorting
+      rank: 0,
       confidence,
       riskLevel
     };
@@ -206,7 +184,6 @@ const Pick3ScoringEngine: React.FC<Pick3ScoringEngineProps> = ({
   const generateTopCombinations = () => {
     setLoading(true);
 
-    // Generate all possible combinations and score them
     const allCombos: CombinationScore[] = [];
     for (let i = 0; i < 10; i++) {
       for (let j = 0; j < 10; j++) {
@@ -218,7 +195,6 @@ const Pick3ScoringEngine: React.FC<Pick3ScoringEngineProps> = ({
       }
     }
 
-    // Sort by total score and take top combinations
     allCombos.sort((a, b) => b.totalScore - a.totalScore);
     const top = allCombos.slice(0, targetDraws).map((combo, index) => ({
       ...combo,
@@ -243,48 +219,58 @@ const Pick3ScoringEngine: React.FC<Pick3ScoringEngineProps> = ({
     }
   };
 
-  const getScoreColor = (score: number) => {
-    if (score >= 0.7) return 'text-green-600';
-    if (score >= 0.5) return 'text-yellow-600';
-    return 'text-red-600';
-  };
-
   return (
-    <div className="scoring-engine-container max-w-7xl mx-auto p-6 bg-white rounded-lg shadow-lg">
+    <div className="max-w-6xl mx-auto p-6">
       <div className="mb-6">
-        <h2 className="page-title">🎯 Pick 3 Scoring Engine</h2>
-        <p className="page-subtitle">
-          Advanced composite scoring system combining 7 weighted factors for optimal combination prediction
+        <h2 className="text-2xl font-bold mb-2">⚡ Live Scoring</h2>
+        <p className="text-gray-600 mb-4">
+          Real-time scoring of all Pick 3 combinations using advanced algorithms
         </p>
-        <div className="last-updated">
-          Last updated: {lastUpdated.toLocaleString()}
+        <div className="flex items-center gap-4 text-sm text-gray-500">
+          <span>Last updated: {lastUpdated.toLocaleString()}</span>
+          <div className="flex items-center gap-2">
+            <label htmlFor="targetDraws" className="font-medium">Show top:</label>
+            <select
+              id="targetDraws"
+              value={targetDraws}
+              onChange={(e) => setTargetDraws(Number(e.target.value))}
+              className="border rounded px-2 py-1"
+            >
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </div>
         </div>
       </div>
 
       {/* Scoring Factors Overview */}
-      <div className="mb-8">
-        <h3 className="text-xl font-semibold mb-4">Scoring Factors</h3>
-        <div className="scoring-factors-grid">
+      <div className="bg-gray-50 p-4 rounded-lg mb-6">
+        <h3 className="text-lg font-semibold mb-3">Active Scoring Factors</h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {SCORING_FACTORS.map((factor, index) => (
-            <div key={index} className="factor-card">
-              <div className="factor-header">
-                <h4 className="factor-name">{factor.name}</h4>
-                <span className="factor-weight">{(factor.weight * 100).toFixed(0)}%</span>
+            <div key={index} className="bg-white p-3 rounded border">
+              <div className="flex justify-between items-center mb-1">
+                <span className="font-medium text-sm">{factor.name}</span>
+                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                  {(factor.weight * 100).toFixed(0)}%
+                </span>
               </div>
-              <p className="factor-description">{factor.description}</p>
+              <p className="text-xs text-gray-600">{factor.description}</p>
             </div>
           ))}
         </div>
       </div>
 
       {/* Top Combinations */}
-      <div className="mb-8">
+      <div className="mb-6">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-xl font-semibold">Top {targetDraws} Combinations</h3>
           <button
             onClick={generateTopCombinations}
             disabled={loading}
-            className="refresh-button"
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
           >
             {loading ? '🔄 Calculating...' : '🔄 Refresh Scores'}
           </button>
@@ -292,42 +278,41 @@ const Pick3ScoringEngine: React.FC<Pick3ScoringEngineProps> = ({
 
         {loading ? (
           <div className="text-center py-8">
-            <div className="loading-spinner mx-auto"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
             <p className="mt-4 text-gray-600">Calculating optimal combinations...</p>
           </div>
         ) : (
-          <div className="combinations-grid">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {topCombinations.map((combo) => (
               <div
                 key={combo.combination}
-                className="combination-card"
+                className="bg-white border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
                 onClick={() => setSelectedCombination(combo)}
               >
-                <div className="combination-rank">#{combo.rank}</div>
                 <div className="flex justify-between items-center mb-2">
-                  <span></span>
-                  <span className={`risk-badge risk-${combo.riskLevel}`}>
-                    {combo.riskLevel.toUpperCase()} RISK
+                  <span className="text-sm font-medium text-gray-500">#{combo.rank}</span>
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${getRiskColor(combo.riskLevel)}`}>
+                    {combo.riskLevel.toUpperCase()}
                   </span>
                 </div>
 
                 <div className="text-center mb-3">
-                  <div className="combination-digits">
+                  <div className="text-2xl font-bold mb-1">
                     {combo.combination.split('').join(' ')}
                   </div>
-                  <div className={`score-display score-${combo.totalScore >= 0.7 ? 'high' : combo.totalScore >= 0.5 ? 'medium' : 'low'}`}>
-                    {(combo.totalScore * 100).toFixed(1)}% Score
+                  <div className="text-lg font-semibold text-blue-600">
+                    {(combo.totalScore * 100).toFixed(1)}%
                   </div>
-                  <div className="confidence-display">
-                    {combo.confidence.toFixed(1)}% Confidence
+                  <div className="text-sm text-gray-600">
+                    {combo.confidence.toFixed(1)}% confidence
                   </div>
                 </div>
 
-                <div className="factor-breakdown">
+                <div className="space-y-1">
                   {combo.factors.slice(0, 3).map((factor, idx) => (
-                    <div key={idx} className="factor-item">
-                      <span className="factor-label">{factor.name}:</span>
-                      <span className="factor-value">{(factor.score * 100).toFixed(0)}%</span>
+                    <div key={idx} className="flex justify-between text-xs">
+                      <span className="text-gray-600">{factor.name}:</span>
+                      <span className="font-medium">{(factor.score * 100).toFixed(0)}%</span>
                     </div>
                   ))}
                 </div>
@@ -339,42 +324,38 @@ const Pick3ScoringEngine: React.FC<Pick3ScoringEngineProps> = ({
 
       {/* Detailed View Modal */}
       {selectedCombination && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h3 className="modal-title">Combination {selectedCombination.combination}</h3>
-              <button
-                onClick={() => setSelectedCombination(null)}
-                className="modal-close"
-              >
-                ×
-              </button>
-            </div>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold">Combination {selectedCombination.combination}</h3>
+                <button
+                  onClick={() => setSelectedCombination(null)}
+                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
 
-            <div className="modal-body">
-              <div className="analysis-grid">
-                <div>
-                  <div className="text-center mb-4">
-                    <div className="large-digits">
-                      {selectedCombination.combination.split('').join(' ')}
-                    </div>
-                    <div className="text-xl font-semibold text-gray-800">
-                      Rank #{selectedCombination.rank}
-                    </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div className="text-center">
+                  <div className="text-4xl font-bold mb-2">
+                    {selectedCombination.combination.split('').join(' ')}
                   </div>
+                  <div className="text-lg text-gray-600 mb-4">Rank #{selectedCombination.rank}</div>
 
-                  <div className="stats-grid">
-                    <div className="stat-item">
-                      <span className="stat-label">Total Score:</span>
-                      <span className="stat-value">{(selectedCombination.totalScore * 100).toFixed(1)}%</span>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span>Total Score:</span>
+                      <span className="font-bold">{(selectedCombination.totalScore * 100).toFixed(1)}%</span>
                     </div>
-                    <div className="stat-item">
-                      <span className="stat-label">Confidence:</span>
-                      <span className="stat-value">{selectedCombination.confidence.toFixed(1)}%</span>
+                    <div className="flex justify-between">
+                      <span>Confidence:</span>
+                      <span className="font-bold">{selectedCombination.confidence.toFixed(1)}%</span>
                     </div>
-                    <div className="stat-item">
-                      <span className="stat-label">Risk Level:</span>
-                      <span className={`risk-badge risk-${selectedCombination.riskLevel}`}>
+                    <div className="flex justify-between">
+                      <span>Risk Level:</span>
+                      <span className={`px-2 py-1 rounded text-sm font-medium ${getRiskColor(selectedCombination.riskLevel)}`}>
                         {selectedCombination.riskLevel.toUpperCase()}
                       </span>
                     </div>
@@ -382,10 +363,10 @@ const Pick3ScoringEngine: React.FC<Pick3ScoringEngineProps> = ({
                 </div>
 
                 <div>
-                  <h4 className="font-semibold mb-3">Analysis Details</h4>
-                  <div className="space-y-2 text-sm">
+                  <h4 className="font-semibold mb-3">Factor Analysis</h4>
+                  <div className="space-y-2">
                     {selectedCombination.factors.map((factor, idx) => (
-                      <div key={idx} className="flex justify-between items-center">
+                      <div key={idx} className="flex justify-between items-center text-sm">
                         <span className="text-gray-600">{factor.name}:</span>
                         <div className="text-right">
                           <div className="font-medium">{(factor.score * 100).toFixed(1)}%</div>
@@ -396,21 +377,6 @@ const Pick3ScoringEngine: React.FC<Pick3ScoringEngineProps> = ({
                   </div>
                 </div>
               </div>
-
-              <div className="scoring-breakdown">
-                <h4 className="font-semibold mb-2">Scoring Breakdown</h4>
-                <div className="space-y-2">
-                  {selectedCombination.factors.map((factor, idx) => (
-                    <div key={idx} className="breakdown-item">
-                      <div className="breakdown-header">
-                        <span className="breakdown-name">{factor.name}</span>
-                        <span className="breakdown-score">{factor.details}</span>
-                      </div>
-                      <p className="breakdown-description">{factor.description}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -419,4 +385,4 @@ const Pick3ScoringEngine: React.FC<Pick3ScoringEngineProps> = ({
   );
 };
 
-export default Pick3ScoringEngine;
+export default LiveScoring;

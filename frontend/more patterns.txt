@@ -1,0 +1,23 @@
+EEEEE 
+OOOOO
+OEOEO
+OOEOO
+and all the different variants
+I want the box and the straight
+
+so  OEOEO should be EEOOO as a box
+E => even and O equals odd
+
+every draw will have this pattern 
+
+Do this for high and low as well     HHHHH LLLLL etc 
+
+L = 1-34   H = 35 - 70 
+
+Pattern Analysis - Cold vs Hot Hit Combinations
+Pattern (Cold-Hot)	Lifetime Occurrences	Draws Since Last	Avg Occurrence (Draws)
+
+give me the 5-0 4-1 3-2 2-3 1-4 0-5 please  but  its Even ODD insntead of cold-hot and it will be Low-high for the other one. 
+
+add these to this page please. 
+

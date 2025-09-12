@@ -1,0 +1,19 @@
+09/06/2025
+Categories: Last Digit 1, Last Digit 2, Last Digit 3, Last Digit 4, First Digit 1, First Digit 2, First Digit 4, First Digit 6, Sum 2, Sum 5, Sum 7, Sum 8, Sum ×4, Sum ×11
+11
+23
+44
+61
+62
+17
+
+so we should get clairfication on the category identification 
+
+for example  the digits  I want to know the following how many hit from the cold/even/due vs the hot/over for each
+last digit how many were coldeven  show the category name and the amount of cold vs hot that hit 
+do this under each category please so each section should have its own section to analyze. 
+
+do it right underneath the count section. Also add a column i want to know how long its been since its been draw. So all the numbers in that section would
+be tracked. 
+
+do this for me please  

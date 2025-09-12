@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Powerball Historical Draws</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .draw {
+            border: 1px solid #ccc;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .balls {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .white-ball {
+            background: white;
+            border: 2px solid #000;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .red-ball {
+            background: red;
+            color: white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Powerball Historical Draws</h1>
+    <div id="draws"></div>
+
+    <script>
+        async function fetchDraws() {
+            try {
+                const response = await fetch('./src/components/powerball.txt');
+                const csvText = await response.text();
+                const draws = parseCSV(csvText);
+                displayDraws(draws);
+            } catch (error) {
+                console.error('Error fetching draws:', error);
+                document.getElementById('draws').innerHTML = '<p>Error loading draws</p>';
+            }
+        }
+
+        function parseCSV(csvText) {
+            const lines = csvText.trim().split('\n');
+            const headers = lines[0].split(',');
+            const draws = [];
+            
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',');
+                const draw = {};
+                headers.forEach((header, index) => {
+                    if (header === 'white_balls') {
+                        draw[header] = values[index].split('|').map(Number);
+                    } else if (header === 'red_ball') {
+                        draw[header] = Number(values[index]);
+                    } else {
+                        draw[header] = values[index];
+                    }
+                });
+                draws.push(draw);
+            }
+            
+            // Sort from latest to oldest
+            draws.sort((a, b) => new Date(b.date) - new Date(a.date));
+            return draws;
+        }
+
+        function displayDraws(draws) {
+            const container = document.getElementById('draws');
+            container.innerHTML = draws.map(draw => `
+                <div class="draw">
+                    <h3>${draw.date}</h3>
+                    <div class="balls">
+                        ${draw.white_balls.map(ball => `<div class="white-ball">${ball}</div>`).join('')}
+                        <div class="red-ball">${draw.red_ball}</div>
+                    </div>
+                    <p>Power Play: ${draw.power_play}</p>
+                </div>
+            `).join('');
+        }
+
+        fetchDraws();
+    </script>
+</body>
+</html>

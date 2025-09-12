@@ -1,0 +1,17 @@
+so i want 70 * 5  = 350 numbers
+
+i want 10 grids of 35 numbers where the numbers are 5x7 rows and columns.  
+
+I want to grid and use it as a hit box. Like once a number occurs in the last 14 draws show me the 
+boxes with red to highlight a hit.  
+
+Now it is believed with this x5   that in 14 draws we may see some columns and rows 
+that have no hits. These numbers will form a group that will track to see how often 
+
+numbers from these groups that have not hits hit.   keep a historical view on the draws out fro each row and column. 
+
+build this and make sure   all 70 numbers are used 5 times but never on the same grid.   
+
+this may take some math.   
+
+This is a new page. 

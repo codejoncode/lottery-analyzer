@@ -1,0 +1,383 @@
+.pairs-analysis {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.pairs-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.pairs-header h2 {
+  color: #2563eb;
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.pairs-header p {
+  color: #6b7280;
+  font-size: 1.1rem;
+}
+
+.input-section {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 30px;
+  border: 2px solid #e5e7eb;
+}
+
+.input-section h3 {
+  margin-bottom: 15px;
+  color: #1f2937;
+  font-size: 1.2rem;
+}
+
+.input-section textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-family: monospace;
+  font-size: 14px;
+  line-height: 1.4;
+  resize: vertical;
+  min-height: 120px;
+}
+
+.input-section textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.input-info {
+  margin-top: 10px;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.analysis-section {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.tabs-section {
+  padding: 20px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.tab-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.tab-buttons button {
+  padding: 10px 20px;
+  border: 1px solid #d1d5db;
+  background: white;
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.tab-buttons button:hover {
+  border-color: #2563eb;
+  color: #2563eb;
+}
+
+.tab-buttons button.active {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+
+.legend {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.color-box {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+}
+
+.color-box.current { background: #10b981; }
+.color-box.recent { background: #34d399; }
+.color-box.moderate { background: #fbbf24; }
+.color-box.late { background: #f97316; }
+.color-box.very-late { background: #ef4444; }
+
+.grid-section {
+  padding: 20px;
+}
+
+.pairs-grid {
+  margin: 0 auto;
+}
+
+.grid-header {
+  display: flex;
+}
+
+.grid-header .header-cell {
+  width: 60px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+  background: #f8fafc;
+}
+
+.grid-row {
+  display: flex;
+}
+
+.grid-row .row-header {
+  width: 40px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+  background: #f8fafc;
+}
+
+.grid-cell {
+  width: 60px;
+  height: 60px;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.grid-cell:hover {
+  transform: scale(1.05);
+  z-index: 10;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.grid-cell.selected {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3);
+}
+
+.grid-cell.empty {
+  background: #f3f4f6;
+  cursor: default;
+}
+
+.grid-cell.current { background: #10b981; }
+.grid-cell.recent { background: #34d399; }
+.grid-cell.moderate { background: #fbbf24; }
+.grid-cell.late { background: #f97316; }
+.grid-cell.very-late { background: #ef4444; }
+
+.pair-number {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  font-size: 10px;
+  font-weight: bold;
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+}
+
+.pair-stats {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  font-size: 8px;
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+  text-align: right;
+}
+
+.hit-count {
+  font-weight: bold;
+}
+
+.skip-count {
+  opacity: 0.8;
+}
+
+/* 5x9 Grid specific styles */
+.grid-5x9 .grid-row .row-header {
+  width: 60px;
+}
+
+.grid-5x9 .grid-cell {
+  width: 60px;
+}
+
+/* Pair Details */
+.pair-details {
+  padding: 20px;
+  border-top: 1px solid #e5e7eb;
+  background: #f8fafc;
+}
+
+.pair-details h3 {
+  margin-bottom: 20px;
+  color: #1f2937;
+  font-size: 1.3rem;
+}
+
+.pair-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.stat-card {
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+  border: 1px solid #e5e7eb;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #2563eb;
+}
+
+.recent-occurrences h4 {
+  margin-bottom: 15px;
+  color: #374151;
+  font-size: 1rem;
+}
+
+.occurrences-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.occurrence {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+
+.draw-number {
+  font-size: 0.9rem;
+  color: #6b7280;
+  min-width: 70px;
+}
+
+.combination {
+  font-family: monospace;
+  font-weight: bold;
+  color: #2563eb;
+  font-size: 1.1rem;
+}
+
+.position {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.pos-front { color: #059669; }
+.pos-split { color: #dc2626; }
+.pos-back { color: #7c3aed; }
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .pairs-analysis {
+    padding: 15px;
+  }
+
+  .tabs-section {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .legend {
+    justify-content: center;
+  }
+
+  .grid-cell {
+    width: 50px;
+    height: 50px;
+  }
+
+  .grid-header .header-cell,
+  .grid-row .row-header {
+    width: 30px;
+    height: 30px;
+    font-size: 12px;
+  }
+
+  .pair-number {
+    font-size: 8px;
+  }
+
+  .pair-stats {
+    font-size: 6px;
+  }
+
+  .pair-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .grid-cell {
+    width: 40px;
+    height: 40px;
+  }
+
+  .legend {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .occurrence {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+}
