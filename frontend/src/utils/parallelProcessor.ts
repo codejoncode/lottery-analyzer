@@ -1,13 +1,13 @@
-import { processInParallel, withPerformanceMonitoring } from '../utils/performanceOptimizer';
+import { withPerformanceMonitoring } from '../utils/performanceOptimizer';
 
-export interface ParallelProcessingOptions {
+export interface ParallelProcessingOptions<T = unknown> {
   concurrency?: number;
   batchSize?: number;
   timeout?: number;
   retryCount?: number;
   enableProgress?: boolean;
   onProgress?: (completed: number, total: number) => void;
-  onError?: (error: Error, item: any) => void;
+  onError?: (error: Error, item: T) => void;
 }
 
 export interface ParallelResult<T, R> {
@@ -23,7 +23,7 @@ export interface ParallelResult<T, R> {
  * Parallel processor for heavy computations with performance monitoring
  */
 export class ParallelProcessor {
-  private activeTasks = new Set<Promise<any>>();
+  private activeTasks = new Set<Promise<unknown>>();
   private abortController = new AbortController();
 
   /**
@@ -32,7 +32,7 @@ export class ParallelProcessor {
   async processItems<T, R>(
     items: T[],
     processor: (item: T, index: number) => Promise<R>,
-    options: ParallelProcessingOptions = {}
+    options: ParallelProcessingOptions<T> = {}
   ): Promise<ParallelResult<T, R>> {
     const {
       concurrency = navigator.hardwareConcurrency || 4,
@@ -188,7 +188,7 @@ export class ParallelProcessor {
   async processWithPriority<T, R>(
     items: Array<{ item: T; priority: number }>,
     processor: (item: T, index: number) => Promise<R>,
-    options: ParallelProcessingOptions = {}
+    options: ParallelProcessingOptions<T> = {}
   ): Promise<ParallelResult<T, R>> {
     // Sort by priority (higher priority first)
     const sortedItems = items.sort((a, b) => b.priority - a.priority);
@@ -205,10 +205,9 @@ export class ParallelProcessor {
     processor: (item: T, index: number) => Promise<R>,
     options: ParallelProcessingOptions & {
       workerCount?: number;
-      loadBalanceThreshold?: number;
     } = {}
   ): Promise<ParallelResult<T, R>> {
-    const { workerCount = navigator.hardwareConcurrency || 4, loadBalanceThreshold = 0.8, ...baseOptions } = options;
+    const { workerCount = navigator.hardwareConcurrency || 4 } = options;
 
     console.log(`⚖️ Load balancing across ${workerCount} virtual workers`);
 
@@ -304,7 +303,7 @@ export const parallelProcessor = new ParallelProcessor();
 export async function parallelMap<T, R>(
   items: T[],
   mapper: (item: T, index: number) => Promise<R>,
-  options?: ParallelProcessingOptions
+  options?: ParallelProcessingOptions<T>
 ): Promise<R[]> {
   const result = await parallelProcessor.processItems(items, mapper, options);
   return result.results;
@@ -316,7 +315,7 @@ export async function parallelMap<T, R>(
 export async function parallelFilter<T>(
   items: T[],
   predicate: (item: T, index: number) => Promise<boolean>,
-  options?: ParallelProcessingOptions
+  options?: ParallelProcessingOptions<T>
 ): Promise<T[]> {
   const results = await parallelMap(
     items,
@@ -333,7 +332,7 @@ export async function parallelFilter<T>(
 export async function parallelFind<T>(
   items: T[],
   predicate: (item: T, index: number) => Promise<boolean>,
-  options?: ParallelProcessingOptions
+  options?: ParallelProcessingOptions<T>
 ): Promise<T | undefined> {
   const result = await parallelProcessor.processItems(
     items,
@@ -352,7 +351,7 @@ export async function parallelReduce<T, R>(
   items: T[],
   reducer: (accumulator: R, item: T, index: number) => Promise<R>,
   initialValue: R,
-  options?: ParallelProcessingOptions
+  _options?: ParallelProcessingOptions<T>
 ): Promise<R> {
   // For reduction, we need to process sequentially to maintain order
   // But we can still use parallel processing for independent operations
@@ -372,7 +371,7 @@ export async function parallelBatchProcess<T, R>(
   items: T[],
   batchProcessor: (batch: T[]) => Promise<R[]>,
   batchSize: number = 100,
-  options?: ParallelProcessingOptions
+  options?: ParallelProcessingOptions<T[]>
 ): Promise<R[]> {
   const batches = parallelProcessor['createBatches'](items, batchSize);
   const batchResults = await parallelMap(batches, batchProcessor, options);

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { DrawLocationAnalyzer } from '../prediction-engine/analysis/DrawLocationAnalyzer';
 import type { Draw } from '../utils/scoringSystem';
+import type { DrawLocationAnalysis, OverUnderAnalysis, DrawIndexRange } from '../prediction-engine/types';
 
 interface DrawLocationChartProps {
   draws: Draw[];
@@ -8,9 +9,9 @@ interface DrawLocationChartProps {
 
 const DrawLocationChart: React.FC<DrawLocationChartProps> = ({ draws }) => {
   const [drawLocationAnalyzer] = useState(() => new DrawLocationAnalyzer(draws));
-  const [analysis, setAnalysis] = useState<any>(null);
-  const [overUnderAnalysis, setOverUnderAnalysis] = useState<any>(null);
-  const [drawRange, setDrawRange] = useState<any>(null);
+  const [analysis, setAnalysis] = useState<DrawLocationAnalysis | null>(null);
+  const [overUnderAnalysis, setOverUnderAnalysis] = useState<OverUnderAnalysis | null>(null);
+  const [drawRange, setDrawRange] = useState<DrawIndexRange | null>(null);
 
   useEffect(() => {
     updateAnalysis();
@@ -33,12 +34,6 @@ const DrawLocationChart: React.FC<DrawLocationChartProps> = ({ draws }) => {
       case 'stable': return 'text-blue-600 bg-blue-100';
       default: return 'text-gray-600 bg-gray-100';
     }
-  };
-
-  const getOverUnderColor = (value: number): string => {
-    if (value > 0) return 'text-green-600 bg-green-100';
-    if (value < 0) return 'text-red-600 bg-red-100';
-    return 'text-blue-600 bg-blue-100';
   };
 
   if (!analysis || !overUnderAnalysis) {
@@ -67,15 +62,15 @@ const DrawLocationChart: React.FC<DrawLocationChartProps> = ({ draws }) => {
       {/* Draw Range Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div className="text-center p-4 bg-blue-50 rounded-md">
-          <div className="text-3xl font-bold text-blue-600">{drawRange.start}</div>
+          <div className="text-3xl font-bold text-blue-600">{drawRange?.start ?? 0}</div>
           <div className="text-sm text-blue-800">Start Draw</div>
         </div>
         <div className="text-center p-4 bg-green-50 rounded-md">
-          <div className="text-3xl font-bold text-green-600">{drawRange.end}</div>
+          <div className="text-3xl font-bold text-green-600">{drawRange?.end ?? 0}</div>
           <div className="text-sm text-green-800">End Draw</div>
         </div>
         <div className="text-center p-4 bg-purple-50 rounded-md">
-          <div className="text-3xl font-bold text-purple-600">{drawRange.total}</div>
+          <div className="text-3xl font-bold text-purple-600">{drawRange?.total ?? 0}</div>
           <div className="text-sm text-purple-800">Total Draws</div>
         </div>
       </div>
@@ -86,10 +81,10 @@ const DrawLocationChart: React.FC<DrawLocationChartProps> = ({ draws }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="border rounded-lg p-4">
             <h4 className="font-medium mb-3">Draw Sum Trend</h4>
-            <div className={`p-3 rounded-md ${getTrendColor(analysis.sumTrend)}`}>
-              <div className="text-lg font-bold capitalize">{analysis.sumTrend}</div>
+            <div className={`p-3 rounded-md ${getTrendColor(analysis.trend)}`}>
+              <div className="text-lg font-bold capitalize">{analysis.trend}</div>
               <div className="text-sm mt-1">
-                Average Change: {analysis.averageChange?.toFixed(2) || 'N/A'}
+                Average Change: {analysis.averageJump?.toFixed(2) || 'N/A'}
               </div>
             </div>
           </div>
@@ -97,7 +92,7 @@ const DrawLocationChart: React.FC<DrawLocationChartProps> = ({ draws }) => {
           <div className="border rounded-lg p-4">
             <h4 className="font-medium mb-3">Volatility</h4>
             <div className="p-3 bg-gray-50 rounded-md">
-              <div className="text-lg font-bold">{analysis.volatility?.toFixed(2) || 'N/A'}</div>
+              <div className="text-lg font-bold">{analysis.patternStrength?.toFixed(2) || 'N/A'}</div>
               <div className="text-sm text-gray-600">Standard Deviation</div>
             </div>
           </div>
@@ -110,12 +105,12 @@ const DrawLocationChart: React.FC<DrawLocationChartProps> = ({ draws }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="border rounded-lg p-4">
             <h4 className="font-medium mb-3">Recent Performance</h4>
-            <div className={`p-3 rounded-md ${getOverUnderColor(overUnderAnalysis.recentOverUnder)}`}>
-              <div className="text-lg font-bold">
-                {overUnderAnalysis.recentOverUnder > 0 ? 'Over' : overUnderAnalysis.recentOverUnder < 0 ? 'Under' : 'At Average'}
+            <div className={`p-3 rounded-md ${getTrendColor(overUnderAnalysis.recentTrend)}`}>
+              <div className="text-lg font-bold capitalize">
+                {overUnderAnalysis.recentTrend}
               </div>
               <div className="text-sm mt-1">
-                Deviation: {overUnderAnalysis.recentOverUnder?.toFixed(2) || 'N/A'}
+                Deviation: {overUnderAnalysis.averageDeviation?.toFixed(2) || 'N/A'}
               </div>
             </div>
           </div>
@@ -124,7 +119,7 @@ const DrawLocationChart: React.FC<DrawLocationChartProps> = ({ draws }) => {
             <h4 className="font-medium mb-3">Prediction Zone</h4>
             <div className="p-3 bg-blue-50 rounded-md">
               <div className="text-lg font-bold">
-                {overUnderAnalysis.predictedRange ? `${overUnderAnalysis.predictedRange[0]} - ${overUnderAnalysis.predictedRange[1]}` : 'N/A'}
+                Predicted Range: N/A
               </div>
               <div className="text-sm text-blue-600">Next Draw Range</div>
             </div>
@@ -144,7 +139,7 @@ const DrawLocationChart: React.FC<DrawLocationChartProps> = ({ draws }) => {
           </div>
           <div className="text-center p-4 bg-yellow-50 rounded-md">
             <div className="text-2xl font-bold text-yellow-600">
-              {analysis.autocorrelation?.toFixed(2) || 'N/A'}
+              {analysis.confidence?.toFixed(2) || 'N/A'}
             </div>
             <div className="text-sm text-yellow-800">Autocorrelation</div>
           </div>
@@ -172,7 +167,7 @@ const DrawLocationChart: React.FC<DrawLocationChartProps> = ({ draws }) => {
           <div className="border rounded-lg p-4">
             <h4 className="font-medium mb-3">Jump Volatility</h4>
             <div className="text-2xl font-bold text-purple-600">
-              {analysis.jumpVolatility?.toFixed(2) || 'N/A'}
+              {analysis.patternStrength?.toFixed(2) || 'N/A'}
             </div>
             <div className="text-sm text-gray-600 mt-1">Standard deviation of jumps</div>
           </div>

@@ -1,4 +1,4 @@
-import type { Combination, PredictionResult } from '../prediction-engine/types';
+import type { PredictionResult } from '../prediction-engine/types';
 
 /**
  * Prediction Cache
@@ -27,7 +27,7 @@ export class PredictionCache {
     enabledFilters?: string[];
     maxCombinations?: number;
     minScore?: number;
-    scoringWeights?: any;
+    scoringWeights?: Record<string, number>;
   }): string {
     const {
       enabledFilters = [],

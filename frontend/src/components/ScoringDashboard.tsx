@@ -5,9 +5,16 @@ import { NewDrawForm } from './NewDrawForm';
 import { CacheManager } from './CacheManager';
 import { DrawDetailModal } from './DrawDetailModal';
 
+interface ExportData {
+  numberStats: NumberScoreData[];
+  totalDraws: number;
+  lastUpdated: string;
+  columnAnalysis: string;
+}
+
 const ScoringDashboard: React.FC = () => {
   const [scoringSystem, setScoringSystem] = useState<PowerballScoringSystem | null>(null);
-  const [numberStats, setNumberStats] = useState<NumberScoreData[]>([]);
+  // Removed unused state variable 'numberStats'
   const [topNumbers, setTopNumbers] = useState<Array<{ number: number; score: number; stats: NumberScoreData }>>([]);
   const [sampleCombination, setSampleCombination] = useState<CombinationScore | null>(null);
   const [sumPrediction, setSumPrediction] = useState<{ predictedSum: number; confidence: number; range: { min: number; max: number } } | null>(null);
@@ -48,7 +55,7 @@ const ScoringDashboard: React.FC = () => {
   } | null>(null);
   const [selectedDraw, setSelectedDraw] = useState<Draw | null>(null);
   const [showDrawModal, setShowDrawModal] = useState(false);
-  const [exportData, setExportData] = useState<any>(null);
+  const [exportData, setExportData] = useState<ExportData | null>(null);
 
   const refreshData = async () => {
     try {
@@ -57,9 +64,6 @@ const ScoringDashboard: React.FC = () => {
       // Create new scoring system with updated data
       const system = PowerballScoringSystem.createFromDataManager();
       setScoringSystem(system);
-
-      const stats = system.getAllNumberStats();
-      setNumberStats(stats);
 
       const top = system.getTopScoringNumbers(20);
       setTopNumbers(top);
@@ -127,9 +131,6 @@ const ScoringDashboard: React.FC = () => {
         const system = new PowerballScoringSystem(draws);
         setScoringSystem(system);
 
-        const stats = system.getAllNumberStats();
-        setNumberStats(stats);
-
         const top = system.getTopScoringNumbers(20);
         setTopNumbers(top);
 
@@ -195,7 +196,6 @@ const ScoringDashboard: React.FC = () => {
       const performanceResult = scoringSystem.updatePredictionsWithPerformance(newDraw);
 
       // Update all state with fresh data
-      setNumberStats(scoringSystem.getAllNumberStats());
       setTopNumbers(scoringSystem.getTopScoringNumbers(20));
       setOptimizedCombinations(scoringSystem.generateOptimizedCombinations(5));
       setPatternAnalysis(scoringSystem.analyzePatterns());
@@ -221,7 +221,6 @@ const ScoringDashboard: React.FC = () => {
     if (scoringSystem) {
       const performanceResult = scoringSystem.updatePredictionsWithPerformance();
 
-      setNumberStats(scoringSystem.getAllNumberStats());
       setTopNumbers(scoringSystem.getTopScoringNumbers(20));
       setOptimizedCombinations(scoringSystem.generateOptimizedCombinations(5));
       setPatternAnalysis(scoringSystem.analyzePatterns());
@@ -1149,21 +1148,21 @@ const ScoringDashboard: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-600 mb-2">
-                  {exportData.draws.length}
+                  {exportData.totalDraws}
                 </div>
                 <div className="text-sm text-gray-600">Historical Draws</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-600 mb-2">
-                  {exportData.predictions.length}
+                  {exportData.numberStats.length}
                 </div>
-                <div className="text-sm text-gray-600">ML Predictions</div>
+                <div className="text-sm text-gray-600">Number Statistics</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-purple-600 mb-2">
-                  {(exportData.systemAccuracy * 100).toFixed(1)}%
+                  {new Date(exportData.lastUpdated).toLocaleDateString()}
                 </div>
-                <div className="text-sm text-gray-600">System Accuracy</div>
+                <div className="text-sm text-gray-600">Last Updated</div>
               </div>
             </div>
 
@@ -1198,11 +1197,11 @@ const ScoringDashboard: React.FC = () => {
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="font-semibold">Last Updated:</span>
-                  <span className="ml-2 text-gray-600">{new Date(exportData.timestamp).toLocaleString()}</span>
+                  <span className="ml-2 text-gray-600">{new Date(exportData.lastUpdated).toLocaleString()}</span>
                 </div>
                 <div>
                   <span className="font-semibold">Data Points:</span>
-                  <span className="ml-2 text-gray-600">{exportData.draws.length * 6} numbers analyzed</span>
+                  <span className="ml-2 text-gray-600">{exportData.numberStats.length} numbers analyzed</span>
                 </div>
               </div>
             </div>
@@ -1363,3 +1362,4 @@ const ScoringDashboard: React.FC = () => {
 }
 
 export default ScoringDashboard;
+

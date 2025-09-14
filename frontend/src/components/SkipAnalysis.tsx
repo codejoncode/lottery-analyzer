@@ -47,7 +47,7 @@ const SkipAnalysis: React.FC = () => {
 
         setDraws(parsedDraws);
         setLoading(false);
-      } catch (err) {
+      } catch {
         setError('Failed to load data');
         setLoading(false);
       }

@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { CacheManager } from '../caching/CacheManager';
-import { PredictionCache } from '../caching/PredictionCache';
-import { ResultCache } from '../caching/ResultCache';
+import type { ComprehensiveCacheStats, PredictionCacheStats, ResultCacheStats } from '../caching/CacheManager';
 
 interface CacheMonitorProps {
   cacheManager: CacheManager;
 }
 
 const CacheMonitor: React.FC<CacheMonitorProps> = ({ cacheManager }) => {
-  const [stats, setStats] = useState<any>(null);
-  const [predictionCacheStats, setPredictionCacheStats] = useState<any>(null);
-  const [resultCacheStats, setResultCacheStats] = useState<any>(null);
+  const [stats, setStats] = useState<ComprehensiveCacheStats | null>(null);
+  const [predictionCacheStats, setPredictionCacheStats] = useState<PredictionCacheStats | null>(null);
+  const [resultCacheStats, setResultCacheStats] = useState<ResultCacheStats | null>(null);
   const [refreshInterval, setRefreshInterval] = useState(5000); // 5 seconds
   const [autoRefresh, setAutoRefresh] = useState(true);
 
@@ -28,16 +27,9 @@ const CacheMonitor: React.FC<CacheMonitorProps> = ({ cacheManager }) => {
       const cacheStats = cacheManager.getStats();
       setStats(cacheStats);
 
-      // Get individual cache stats
-      const predCache = (cacheManager as any).predictionCache as PredictionCache;
-      const resCache = (cacheManager as any).resultCache as ResultCache;
-
-      if (predCache) {
-        setPredictionCacheStats(predCache.getStats());
-      }
-      if (resCache) {
-        setResultCacheStats(resCache.getStats());
-      }
+      // Get individual cache stats using public methods
+      setPredictionCacheStats(cacheManager.getPredictionCacheStats());
+      setResultCacheStats(cacheManager.getResultCacheStats());
     } catch (error) {
       console.error('Failed to get cache stats:', error);
     }
@@ -158,19 +150,19 @@ const CacheMonitor: React.FC<CacheMonitorProps> = ({ cacheManager }) => {
       {/* Overall Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="text-center p-4 bg-blue-50 rounded-md">
-          <div className="text-3xl font-bold text-blue-600">{stats.totalEntries}</div>
+          <div className="text-3xl font-bold text-blue-600">{stats.overall.totalEntries}</div>
           <div className="text-sm text-blue-800">Total Entries</div>
         </div>
-        <div className={`text-center p-4 rounded-md ${getHitRateColor(stats.overallHitRate)}`}>
-          <div className="text-3xl font-bold">{(stats.overallHitRate * 100).toFixed(1)}%</div>
+        <div className={`text-center p-4 rounded-md ${getHitRateColor(stats.overall.hitRate)}`}>
+          <div className="text-3xl font-bold">{(stats.overall.hitRate * 100).toFixed(1)}%</div>
           <div className="text-sm">Overall Hit Rate</div>
         </div>
         <div className="text-center p-4 bg-green-50 rounded-md">
-          <div className="text-3xl font-bold text-green-600">{formatBytes(stats.totalSize)}</div>
+          <div className="text-3xl font-bold text-green-600">{formatBytes(stats.overall.totalMemory)}</div>
           <div className="text-sm text-green-800">Total Size</div>
         </div>
-        <div className={`text-center p-4 rounded-md ${getEfficiencyColor(stats.memoryEfficiency)}`}>
-          <div className="text-3xl font-bold">{(stats.memoryEfficiency * 100).toFixed(1)}%</div>
+        <div className={`text-center p-4 rounded-md ${getEfficiencyColor(resultCacheStats ? (1 - resultCacheStats.memoryUsage / resultCacheStats.maxMemory) : 0)}`}>
+          <div className="text-3xl font-bold">{resultCacheStats ? ((1 - resultCacheStats.memoryUsage / resultCacheStats.maxMemory) * 100).toFixed(1) : 0}%</div>
           <div className="text-sm">Memory Efficiency</div>
         </div>
       </div>
@@ -184,7 +176,7 @@ const CacheMonitor: React.FC<CacheMonitorProps> = ({ cacheManager }) => {
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Entries:</span>
-                <span className="font-medium">{predictionCacheStats.entries}</span>
+                <span className="font-medium">{predictionCacheStats.size}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Hit Rate:</span>
@@ -198,11 +190,11 @@ const CacheMonitor: React.FC<CacheMonitorProps> = ({ cacheManager }) => {
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Avg Access Time:</span>
-                <span className="font-medium">{formatTime(predictionCacheStats.avgAccessTime)}</span>
+                <span className="font-medium">{formatTime(predictionCacheStats.averageAge)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">TTL Hits:</span>
-                <span className="font-medium">{predictionCacheStats.ttlHits}</span>
+                <span className="font-medium">{predictionCacheStats.totalHits}</span>
               </div>
             </div>
           </div>
@@ -215,7 +207,7 @@ const CacheMonitor: React.FC<CacheMonitorProps> = ({ cacheManager }) => {
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Entries:</span>
-                <span className="font-medium">{resultCacheStats.entries}</span>
+                <span className="font-medium">{resultCacheStats.size}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Hit Rate:</span>
@@ -233,7 +225,7 @@ const CacheMonitor: React.FC<CacheMonitorProps> = ({ cacheManager }) => {
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Evictions:</span>
-                <span className="font-medium">{resultCacheStats.evictions}</span>
+                <span className="font-medium">N/A</span>
               </div>
             </div>
           </div>
@@ -246,19 +238,19 @@ const CacheMonitor: React.FC<CacheMonitorProps> = ({ cacheManager }) => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="text-center p-3 bg-green-50 rounded-md">
             <div className="text-xl font-bold text-green-600">
-              {formatTime(stats.avgResponseTime)}
+              {formatTime(stats.overall.lastOptimized)}
             </div>
             <div className="text-sm text-green-800">Avg Response Time</div>
           </div>
           <div className="text-center p-3 bg-blue-50 rounded-md">
             <div className="text-xl font-bold text-blue-600">
-              {stats.totalRequests.toLocaleString()}
+              {(stats.predictionCache.totalAccesses + stats.resultCache.totalAccesses).toLocaleString()}
             </div>
             <div className="text-sm text-blue-800">Total Requests</div>
           </div>
           <div className="text-center p-3 bg-purple-50 rounded-md">
             <div className="text-xl font-bold text-purple-600">
-              {stats.cacheSavingsPercent.toFixed(1)}%
+              {(stats.overall.hitRate * 100).toFixed(1)}%
             </div>
             <div className="text-sm text-purple-800">Computation Saved</div>
           </div>
@@ -273,21 +265,21 @@ const CacheMonitor: React.FC<CacheMonitorProps> = ({ cacheManager }) => {
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium">Memory Pressure</span>
               <span className={`px-2 py-1 rounded text-xs ${
-                stats.memoryPressure < 0.7 ? 'text-green-600 bg-green-100' :
-                stats.memoryPressure < 0.9 ? 'text-yellow-600 bg-yellow-100' :
+                (resultCacheStats?.memoryUsagePercent ?? 0) < 70 ? 'text-green-600 bg-green-100' :
+                (resultCacheStats?.memoryUsagePercent ?? 0) < 90 ? 'text-yellow-600 bg-yellow-100' :
                 'text-red-600 bg-red-100'
               }`}>
-                {(stats.memoryPressure * 100).toFixed(0)}%
+                {((resultCacheStats?.memoryUsagePercent ?? 0)).toFixed(0)}%
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
                 className={`h-2 rounded-full ${
-                  stats.memoryPressure < 0.7 ? 'bg-green-500' :
-                  stats.memoryPressure < 0.9 ? 'bg-yellow-500' :
+                  (resultCacheStats?.memoryUsagePercent ?? 0) < 70 ? 'bg-green-500' :
+                  (resultCacheStats?.memoryUsagePercent ?? 0) < 90 ? 'bg-yellow-500' :
                   'bg-red-500'
                 }`}
-                style={{ width: `${stats.memoryPressure * 100}%` }}
+                style={{ width: `${resultCacheStats?.memoryUsagePercent ?? 0}%` }}
               ></div>
             </div>
           </div>
@@ -296,21 +288,21 @@ const CacheMonitor: React.FC<CacheMonitorProps> = ({ cacheManager }) => {
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium">Cache Effectiveness</span>
               <span className={`px-2 py-1 rounded text-xs ${
-                stats.effectiveness > 0.8 ? 'text-green-600 bg-green-100' :
-                stats.effectiveness > 0.6 ? 'text-yellow-600 bg-yellow-100' :
+                stats.overall.hitRate > 0.8 ? 'text-green-600 bg-green-100' :
+                stats.overall.hitRate > 0.6 ? 'text-yellow-600 bg-yellow-100' :
                 'text-red-600 bg-red-100'
               }`}>
-                {(stats.effectiveness * 100).toFixed(0)}%
+                {(stats.overall.hitRate * 100).toFixed(0)}%
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
                 className={`h-2 rounded-full ${
-                  stats.effectiveness > 0.8 ? 'bg-green-500' :
-                  stats.effectiveness > 0.6 ? 'bg-yellow-500' :
+                  stats.overall.hitRate > 0.8 ? 'bg-green-500' :
+                  stats.overall.hitRate > 0.6 ? 'bg-yellow-500' :
                   'bg-red-500'
                 }`}
-                style={{ width: `${stats.effectiveness * 100}%` }}
+                style={{ width: `${stats.overall.hitRate * 100}%` }}
               ></div>
             </div>
           </div>

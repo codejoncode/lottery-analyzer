@@ -1,4 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import * as React from 'react';
+
+// Type declaration for Node.js Timer
+type NodeJSTimer = ReturnType<typeof setTimeout>;
 import { createLazyLoader } from '../utils/performanceOptimizer';
 import type { LazyLoader } from '../utils/performanceOptimizer';
 
@@ -51,7 +55,7 @@ export function useLazyLoad<T>(
   });
 
   const lazyLoaderRef = useRef<LazyLoader<T> | null>(null);
-  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const retryTimeoutRef = useRef<NodeJSTimer | null>(null);
 
   // Initialize lazy loader
   useEffect(() => {
@@ -230,7 +234,7 @@ export function useLazyLoadPaginated<T>(
 
         // Ensure array has enough space
         while (newData.length < endIndex) {
-          newData.push(null as any);
+          newData.push(undefined as T);
         }
 
         // Fill in the page data
@@ -354,7 +358,7 @@ export function useLazyLoadMultiple<T>(
   loadedCount: number;
   errorCount: number;
 } {
-  const { concurrency = 3, autoLoad = false, ...lazyOptions } = options;
+  const { concurrency = 3, autoLoad = false } = options;
   const [states, setStates] = useState(new Map<string, LazyLoadState<T>>());
 
   // Initialize states for all items

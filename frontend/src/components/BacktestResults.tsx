@@ -3,7 +3,7 @@ import { BacktestEngine } from '../backtesting/BacktestEngine';
 import { AccuracyTracker } from '../backtesting/AccuracyTracker';
 import { ValidationMetrics } from '../backtesting/ValidationMetrics';
 import type { Draw } from '../utils/scoringSystem';
-import type { BacktestResult } from '../prediction-engine/types';
+import type { BacktestResult, BacktestStatistics, ValidationResults } from '../prediction-engine/types';
 
 interface BacktestResultsProps {
   draws: Draw[];
@@ -15,8 +15,8 @@ const BacktestResults: React.FC<BacktestResultsProps> = ({ draws }) => {
   const [validationMetrics] = useState(() => new ValidationMetrics());
 
   const [results, setResults] = useState<BacktestResult[]>([]);
-  const [stats, setStats] = useState<any>(null);
-  const [validation, setValidation] = useState<any>(null);
+  const [stats, setStats] = useState<BacktestStatistics | null>(null);
+  const [validation, setValidation] = useState<ValidationResults | null>(null);
   const [loading, setLoading] = useState(false);
 
   const [testDraws, setTestDraws] = useState(50);

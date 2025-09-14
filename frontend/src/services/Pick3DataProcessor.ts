@@ -1,5 +1,11 @@
 import type { Pick3Draw } from './Pick3DataManager';
 
+export interface PatternAnalysis {
+  repeating: string[];
+  alternating: string[];
+  trending: string[];
+}
+
 export interface ColumnData {
   position: number; // 0, 1, or 2 for hundreds, tens, units
   digit: number;
@@ -178,7 +184,7 @@ export class Pick3DataProcessor {
     return { repeating, alternating, trending };
   }
 
-  private generatePredictions(columns: ColumnData[], patterns: any): {
+  private generatePredictions(columns: ColumnData[], patterns: PatternAnalysis): {
     nextMidday: string;
     nextEvening: string;
     confidence: number;

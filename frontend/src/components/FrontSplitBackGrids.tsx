@@ -15,7 +15,7 @@ const FrontSplitBackGrids: React.FC = () => {
   const [highlightMode, setHighlightMode] = useState<'none' | 'hot' | 'cold' | 'selected'>('none');
 
   // Generate pair data for each position type
-  const generatePairData = (position: 'front' | 'split' | 'back'): PairData[] => {
+  const generatePairData = (_position: 'front' | 'split' | 'back'): PairData[] => {
     const pairs = [];
     for (let i = 0; i < 10; i++) {
       for (let j = 0; j < 10; j++) {

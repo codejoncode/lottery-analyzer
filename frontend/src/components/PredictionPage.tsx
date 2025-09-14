@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { PowerballScoringSystem, DataManager } from '../utils/scoringSystem';
+import { PowerballScoringSystem } from '../utils/scoringSystem';
 
 interface PredictionResult {
   combination: number[];
@@ -8,9 +8,16 @@ interface PredictionResult {
   reasoning: string[];
 }
 
+interface ColumnPrediction {
+  predictedNumber: number;
+  confidence: number;
+  alternatives: number[];
+  reasoning: string;
+}
+
 const PredictionPage: React.FC = () => {
   const [predictions, setPredictions] = useState<PredictionResult | null>(null);
-  const [columnPredictions, setColumnPredictions] = useState<Map<number, any>>(new Map());
+  const [columnPredictions, setColumnPredictions] = useState<Map<number, ColumnPrediction>>(new Map());
   const [loading, setLoading] = useState(false);
   const [scoringSystem] = useState(() => new PowerballScoringSystem());
 
@@ -23,7 +30,7 @@ const PredictionPage: React.FC = () => {
     try {
       // Generate column-based predictions
       const columnAnalyzer = scoringSystem.getColumnAnalyzer();
-      const columnPreds = new Map<number, any>();
+      const columnPreds = new Map<number, ColumnPrediction>();
 
       for (let col = 1; col <= 6; col++) {
         const prediction = columnAnalyzer.predictNextNumberForColumn(col);

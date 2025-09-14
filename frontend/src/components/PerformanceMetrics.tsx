@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { pick3Analyzer } from '../utils/pick3Analyzer';
 
 interface PerformanceMetric {
   name: string;
@@ -39,7 +38,7 @@ const PerformanceMetrics: React.FC = () => {
 
     // Mock performance data generation
     const periods = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
-    const data: PerformanceData[] = periods.map((period, index) => ({
+    const data: PerformanceData[] = periods.map((period, _index) => ({
       period,
       metrics: [
         {

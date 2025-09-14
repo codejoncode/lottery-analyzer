@@ -1,8 +1,21 @@
 import React from 'react';
-import type { Draw } from '../utils/scoringSystem';
 import { performanceOptimizer } from './performanceOptimizer';
 import { computationTimeMonitor } from './computationTimeMonitor';
-import { memoryOptimizer } from './memoryOptimizer';
+import { memoryOptimizer, type MemoryStats } from './memoryOptimizer';
+
+interface ExtendedPerformance extends Performance {
+  memory?: {
+    usedJSHeapSize: number;
+    totalJSHeapSize: number;
+    jsHeapSizeLimit: number;
+  };
+}
+
+export interface PerformanceMetadata {
+  inputSize?: number;
+  outputSize?: number;
+  [key: string]: string | number | boolean | null | undefined;
+}
 
 export interface PerformanceMetrics {
   operationName: string;
@@ -11,7 +24,42 @@ export interface PerformanceMetrics {
   duration: number;
   memoryUsage?: number;
   cpuUsage?: number;
-  metadata?: Record<string, any>;
+  metadata?: PerformanceMetadata;
+}
+
+export interface PerformanceOptimizerSummary {
+  totalOperations: number;
+  averageDuration: number;
+  totalMemoryUsage: number;
+  slowestOperation: string;
+  memoryEfficiency: number;
+}
+
+export interface ComputationMonitorSummary {
+  totalOperations: number;
+  activeOperations: number;
+  averageDuration: number;
+  totalAlerts: number;
+  successRate: number;
+  topSlowOperations: Array<{ name: string; averageDuration: number; count: number }>;
+}
+
+export interface OptimizationStatus {
+  optimizationEnabled: boolean;
+  performanceOptimizer: PerformanceOptimizerSummary | null;
+  computationMonitor: ComputationMonitorSummary | null;
+  memoryOptimizer: MemoryStats | null;
+}
+
+export interface ExportData {
+  metrics: PerformanceMetrics[];
+  systemPerformance: SystemPerformance;
+  exportTime: string;
+  optimizationData?: {
+    performanceOptimizer: unknown;
+    computationMonitor: unknown;
+    memoryOptimizer: unknown;
+  };
 }
 
 export interface SystemPerformance {
@@ -22,6 +70,13 @@ export interface SystemPerformance {
   slowestOperation: string;
   fastestOperation: string;
   operationsByType: Record<string, number>;
+  optimizationMetrics?: {
+    cacheEfficiency: number;
+    computationEfficiency: number;
+    memoryEfficiency: number;
+    activeOperations: number;
+    totalAlerts: number;
+  };
 }
 
 /**
@@ -38,7 +93,7 @@ export class PerformanceMonitor {
   /**
    * Start timing an operation
    */
-  startOperation(operationName: string, metadata?: Record<string, any>): () => void {
+  startOperation(operationName: string, metadata?: PerformanceMetadata): () => void {
     if (!this.isEnabled) {
       return () => {}; // No-op function
     }
@@ -98,8 +153,9 @@ export class PerformanceMonitor {
    * Get current memory usage
    */
   private getMemoryUsage(): number {
-    if ('memory' in performance) {
-      return (performance as any).memory.usedJSHeapSize || 0;
+    const extendedPerformance = performance as ExtendedPerformance;
+    if (extendedPerformance.memory) {
+      return extendedPerformance.memory.usedJSHeapSize || 0;
     }
     return 0;
   }
@@ -147,7 +203,7 @@ export class PerformanceMonitor {
       const memoryStats = memoryOptimizer.getMemoryStats();
 
       // Enhance system performance with optimization data
-      (systemPerf as any).optimizationMetrics = {
+      systemPerf.optimizationMetrics = {
         cacheEfficiency: optimizerSummary.memoryEfficiency,
         computationEfficiency: computationSummary.successRate,
         memoryEfficiency: memoryStats.efficiency,
@@ -195,15 +251,7 @@ export class PerformanceMonitor {
     console.log(`⚡ Performance optimization ${enabled ? 'enabled' : 'disabled'}`);
   }
 
-  /**
-   * Get optimization status
-   */
-  getOptimizationStatus(): {
-    optimizationEnabled: boolean;
-    performanceOptimizer: any;
-    computationMonitor: any;
-    memoryOptimizer: any;
-  } {
+  getOptimizationStatus(): OptimizationStatus {
     return {
       optimizationEnabled: this.optimizationEnabled,
       performanceOptimizer: this.optimizationEnabled ? performanceOptimizer.getPerformanceSummary() : null,
@@ -247,11 +295,8 @@ export class PerformanceMonitor {
     console.log(`🧹 Cleaned up ${this.maxMetrics - this.metrics.length} old metrics`);
   }
 
-  /**
-   * Export metrics for analysis
-   */
   exportMetrics(): string {
-    const exportData: any = {
+    const exportData: ExportData = {
       metrics: this.metrics,
       systemPerformance: this.getSystemPerformance(),
       exportTime: new Date().toISOString()
@@ -319,7 +364,7 @@ export class PerformanceMonitor {
 export function usePerformanceMonitor() {
   const [monitor] = React.useState(() => new PerformanceMonitor());
 
-  const startTiming = React.useCallback((operationName: string, metadata?: Record<string, any>) => {
+  const startTiming = React.useCallback((operationName: string, metadata?: PerformanceMetadata) => {
     return monitor.startOperation(operationName, metadata);
   }, [monitor]);
 

@@ -1,5 +1,5 @@
 import type { Draw } from './scoringSystem';
-import { performanceOptimizer, withPerformanceMonitoring } from './performanceOptimizer';
+import { withPerformanceMonitoring } from './performanceOptimizer';
 
 export interface CorrelationAnalysis {
   factor1: string;
@@ -326,7 +326,6 @@ export class AdvancedAnalytics {
           correlations.push(correlation);
         }
 
-        const avgCorrelation = correlations.reduce((a, b) => a + b, 0) / correlations.length;
         const maxCorrelation = Math.max(...correlations);
 
         if (maxCorrelation > 0.3) {
@@ -479,7 +478,7 @@ export class AdvancedAnalytics {
   /**
    * Compare different prediction models
    */
-  private async compareModels(draws: Draw[]): Promise<ModelComparison[]> {
+  private async compareModels(_draws: Draw[]): Promise<ModelComparison[]> {
     // Simulate model comparison (in real implementation, this would run actual models)
     const models: ModelComparison[] = [
       {

@@ -134,7 +134,6 @@ export class LiveColumnStatsManager {
 
   private async generateColumnUpdate(column: number): Promise<LiveStatsUpdate> {
     const analysis = this.columnAnalyzer.analyzeColumn(column);
-    const trend = this.columnAnalyzer.detectColumnTrend(column);
 
     // Get hot numbers (recent appearances)
     const hotNumbers: number[] = [];
@@ -142,7 +141,7 @@ export class LiveColumnStatsManager {
     const trendingUp: number[] = [];
     const trendingDown: number[] = [];
 
-    analysis.numberStats.forEach((stats, key) => {
+    analysis.numberStats.forEach((stats, _key) => {
       if (stats.isHot) hotNumbers.push(stats.number);
       if (stats.isCold) coldNumbers.push(stats.number);
 

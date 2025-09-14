@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { pick3Analyzer } from '../utils/pick3Analyzer';
-import type { Pick3RootSumAnalysis } from '../utils/pick3Analyzer';
 
 interface RootSumsAnalysisProps {
   className?: string;

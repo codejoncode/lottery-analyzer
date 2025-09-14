@@ -1,6 +1,5 @@
 import type { Draw } from './scoringSystem';
-import { performanceOptimizer, withPerformanceMonitoring } from './performanceOptimizer';
-
+import { withPerformanceMonitoring } from './performanceOptimizer';
 export interface Pattern {
   id: string;
   type: 'recurrence' | 'positional' | 'temporal' | 'combinatorial';
@@ -9,7 +8,7 @@ export interface Pattern {
   frequency: number;
   lastSeen: number;
   strength: number;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 }
 
 export interface PatternRecognitionResult {
@@ -34,7 +33,7 @@ export interface MLModel {
   accuracy: number;
   confidence: number;
   lastTrained: number;
-  parameters: Record<string, any>;
+  parameters: Record<string, unknown>;
   performance: {
     precision: number;
     recall: number;
@@ -363,28 +362,30 @@ export class MLIntegration {
   /**
    * Generate ML-based prediction from patterns
    */
-  private async generateMLPrediction(patterns: Pattern[], draws: Draw[]): Promise<number[]> {
-    const prediction: number[] = [];
+  private async generateMLPrediction(patterns: Pattern[], _draws: Draw[]): Promise<number[]> {
     const scores = new Map<number, number>();
 
     // Score numbers based on patterns
     patterns.forEach(pattern => {
       switch (pattern.type) {
-        case 'recurrence':
-          const recurrenceNum = pattern.metadata.number;
+        case 'recurrence': {
+          const recurrenceNum = pattern.metadata.number as number;
           scores.set(recurrenceNum, (scores.get(recurrenceNum) || 0) + pattern.strength * 10);
           break;
+        }
 
-        case 'positional':
-          const positionalNum = pattern.metadata.number;
+        case 'positional': {
+          const positionalNum = pattern.metadata.number as number;
           scores.set(positionalNum, (scores.get(positionalNum) || 0) + pattern.strength * 8);
           break;
+        }
 
-        case 'combinatorial':
-          pattern.metadata.pair.forEach((num: number) => {
+        case 'combinatorial': {
+          (pattern.metadata.pair as number[]).forEach((num: number) => {
             scores.set(num, (scores.get(num) || 0) + pattern.strength * 6);
           });
           break;
+        }
       }
     });
 
@@ -451,7 +452,7 @@ export class MLIntegration {
     const accuracy = hits / predictedNumbers.length;
 
     // Update weights based on performance
-    this.adaptiveWeights.forEach((weight, factor) => {
+    this.adaptiveWeights.forEach((weight, _factor) => {
       // Simple adaptation: increase weights for factors that contributed to hits
       const adaptation = accuracy > 0.2 ? 0.05 : -0.02; // Reward or penalize
       weight.weight = Math.max(0.1, Math.min(2.0, weight.weight + adaptation));

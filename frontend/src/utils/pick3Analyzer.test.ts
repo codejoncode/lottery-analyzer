@@ -1,3 +1,4 @@
+import { describe, test, expect } from 'vitest';
 import { pick3Analyzer } from '../utils/pick3Analyzer';
 
 describe('Pick 3 Analyzer - Mathematical Validation', () => {
@@ -85,7 +86,7 @@ describe('Pick 3 Analyzer - Mathematical Validation', () => {
 
     // Check that 0 maps to 5 in VTrac
     const combo005 = pick3Analyzer.getAllCombinations().find(c => c.straight === '005');
-    expect(combo005?.vtrac).toBe('115'); // 0->1, 0->1, 5->5? Wait, let me check the mapping
+    expect(combo005?.vtrac).toBe('555'); // 0->5, 0->5, 5->5
 
     // Actually, VTrac typically maps:
     // 0→5, 1→1, 2→2, 3→3, 4→4, 5→0, 6→1, 7→2, 8→3, 9→4
@@ -93,7 +94,7 @@ describe('Pick 3 Analyzer - Mathematical Validation', () => {
     // 0→5, so 005 should be 5,5,0 → but wait, the mapping is usually 1-5 range
     // Let me check what our implementation does
     const testCombo = pick3Analyzer.getAllCombinations().find(c => c.straight === '012');
-    expect(testCombo?.vtrac).toBe('152'); // 0→5, 1→1, 2→2
+    expect(testCombo?.vtrac).toBe('512'); // 0→5, 1→1, 2→2
   });
 
   test('should calculate correct odds for different bet types', () => {

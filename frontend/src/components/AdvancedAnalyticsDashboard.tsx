@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { advancedAnalytics, performAdvancedAnalytics, type AdvancedAnalyticsResult } from '../utils/advancedAnalytics';
 import type { Draw } from '../utils/scoringSystem';
-import { performanceOptimizer } from '../utils/performanceOptimizer';
 
 interface AdvancedAnalyticsDashboardProps {
   draws: Draw[];

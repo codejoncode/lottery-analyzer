@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { pick3Analyzer } from '../utils/pick3Analyzer';
 
 interface ValidationResult {
   date: string;

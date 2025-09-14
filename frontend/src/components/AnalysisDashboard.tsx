@@ -1,16 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { PredictionEngine } from '../prediction-engine/PredictionEngine';
 import { CacheManager } from '../caching/CacheManager';
-import { BacktestEngine } from '../backtesting/BacktestEngine';
-import { HotColdAnalyzer } from '../prediction-engine/analysis/HotColdAnalyzer';
-import { DrawLocationAnalyzer } from '../prediction-engine/analysis/DrawLocationAnalyzer';
 import type { Draw } from '../utils/scoringSystem';
 import PredictionDashboard from './PredictionDashboard';
 import BacktestResults from './BacktestResults';
 import CacheMonitor from './CacheMonitor';
 import HotColdChart from './HotColdChart';
 import DrawLocationChart from './DrawLocationChart';
-import ScoringBreakdown from './ScoringBreakdown';
 import PerformanceDashboard from './PerformanceDashboard';
 import PredictionValidationDashboard from './PredictionValidationDashboard';
 
@@ -24,9 +20,6 @@ const AnalysisDashboard: React.FC<AnalysisDashboardProps> = ({ draws }) => {
   const [activeTab, setActiveTab] = useState<TabType>('predictions');
   const [predictionEngine] = useState(() => new PredictionEngine(draws));
   const [cacheManager] = useState(() => new CacheManager());
-  const [backtestEngine] = useState(() => new BacktestEngine(draws));
-  const [hotColdAnalyzer] = useState(() => new HotColdAnalyzer(draws));
-  const [drawLocationAnalyzer] = useState(() => new DrawLocationAnalyzer(draws));
 
   const [systemStats, setSystemStats] = useState({
     totalDraws: draws.length,

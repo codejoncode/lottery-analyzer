@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { PredictionEngine } from '../prediction-engine/PredictionEngine';
 import { BacktestEngine } from '../backtesting/BacktestEngine';
 import { CacheManager } from '../caching/CacheManager';
+import type { ComprehensiveCacheStats } from '../caching/CacheManager';
 import type { Draw } from '../utils/scoringSystem';
-import type { PredictionResult } from '../prediction-engine/types';
+import type { PredictionResult, BacktestStatistics } from '../prediction-engine/types';
 
 interface FilterOption {
   id: string;
@@ -36,11 +37,11 @@ const PredictionDashboard: React.FC = () => {
   const [minScore, setMinScore] = useState(0);
 
   // Backtesting options
-  const [backtestResults, setBacktestResults] = useState<any>(null);
+  const [backtestResults, setBacktestResults] = useState<BacktestStatistics | null>(null);
   const [backtestDraws, setBacktestDraws] = useState(20);
 
   // Cache stats
-  const [cacheStats, setCacheStats] = useState<any>(null);
+  const [cacheStats, setCacheStats] = useState<ComprehensiveCacheStats | null>(null);
 
   useEffect(() => {
     initializeSystem();
@@ -107,7 +108,9 @@ const PredictionDashboard: React.FC = () => {
       setPredictions(result);
 
       // Update cache stats
-      setCacheStats(cacheManager?.getStats());
+      if (cacheManager) {
+        setCacheStats(cacheManager.getStats());
+      }
 
     } catch (error) {
       console.error('Error generating predictions:', error);
@@ -150,7 +153,9 @@ const PredictionDashboard: React.FC = () => {
 
   const clearCache = () => {
     cacheManager?.clearAll();
-    setCacheStats(cacheManager?.getStats());
+    if (cacheManager) {
+      setCacheStats(cacheManager.getStats());
+    }
     console.log('🗑️ Cache cleared');
   };
 
@@ -234,6 +239,19 @@ const PredictionDashboard: React.FC = () => {
                       max="100"
                       value={minScore}
                       onChange={(e) => setMinScore(Number(e.target.value))}
+                      className="w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Backtest Draws: {backtestDraws}
+                    </label>
+                    <input
+                      type="range"
+                      min="5"
+                      max="100"
+                      value={backtestDraws}
+                      onChange={(e) => setBacktestDraws(Number(e.target.value))}
                       className="w-full"
                     />
                   </div>

@@ -5,7 +5,7 @@ interface EducationalContentProps {
   onStepChange?: (step: number) => void;
 }
 
-const EducationalContent: React.FC<EducationalContentProps> = ({ currentStep = 0, onStepChange }) => {
+const EducationalContent: React.FC<EducationalContentProps> = ({ currentStep: _currentStep = 0, onStepChange: _onStepChange }) => {
   const [activeTab, setActiveTab] = useState<'methodology' | 'tutorials' | 'transparency'>('methodology');
 
   const methodologySteps = [
@@ -271,7 +271,7 @@ const EducationalContent: React.FC<EducationalContentProps> = ({ currentStep = 0
           ].map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id as 'methodology' | 'tutorials' | 'transparency')}
               className={`py-4 px-1 border-b-2 font-medium text-sm ${
                 activeTab === tab.id
                   ? 'border-blue-500 text-blue-600'

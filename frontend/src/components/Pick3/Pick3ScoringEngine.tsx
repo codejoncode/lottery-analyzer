@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Pick3Analyzer } from '../../utils/pick3Analyzer';
 import './Pick3ScoringEngine.css';
 
 interface ScoringFactor {
@@ -20,15 +19,15 @@ interface CombinationScore {
 }
 
 interface Pick3ScoringEngineProps {
-  historicalDraws?: string[];
+  _historicalDraws?: string[];
   targetDraws?: number;
 }
 
 const Pick3ScoringEngine: React.FC<Pick3ScoringEngineProps> = ({
-  historicalDraws = [],
+  _historicalDraws = [],
   targetDraws = 10
 }) => {
-  const [analyzer] = useState(() => new Pick3Analyzer());
+  // Removed unused 'analyzer' variable
   const [topCombinations, setTopCombinations] = useState<CombinationScore[]>([]);
   const [selectedCombination, setSelectedCombination] = useState<CombinationScore | null>(null);
   const [loading, setLoading] = useState(false);
@@ -62,7 +61,7 @@ const Pick3ScoringEngine: React.FC<Pick3ScoringEngineProps> = ({
     // Simulate skip tracker analysis
     const digits = combo.split('').map(Number);
     let score = 0;
-    digits.forEach(digit => {
+    digits.forEach(_digit => {
       // Prefer digits that are "due" (higher skip counts)
       const skipFactor = Math.random() * 0.5 + 0.5; // Mock skip analysis
       score += skipFactor;
@@ -78,7 +77,7 @@ const Pick3ScoringEngine: React.FC<Pick3ScoringEngineProps> = ({
       combo[0] + combo[2]  // Split pair
     ];
     let score = 0;
-    pairs.forEach(pair => {
+    pairs.forEach(_pair => {
       // Higher score for pairs that appear frequently
       const pairFrequency = Math.random() * 0.7 + 0.3;
       score += pairFrequency;
@@ -233,21 +232,6 @@ const Pick3ScoringEngine: React.FC<Pick3ScoringEngineProps> = ({
   useEffect(() => {
     generateTopCombinations();
   }, [targetDraws]);
-
-  const getRiskColor = (risk: string) => {
-    switch (risk) {
-      case 'low': return 'text-green-600 bg-green-100';
-      case 'medium': return 'text-yellow-600 bg-yellow-100';
-      case 'high': return 'text-red-600 bg-red-100';
-      default: return 'text-gray-600 bg-gray-100';
-    }
-  };
-
-  const getScoreColor = (score: number) => {
-    if (score >= 0.7) return 'text-green-600';
-    if (score >= 0.5) return 'text-yellow-600';
-    return 'text-red-600';
-  };
 
   return (
     <div className="scoring-engine-container max-w-7xl mx-auto p-6 bg-white rounded-lg shadow-lg">

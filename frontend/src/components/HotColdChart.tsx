@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { HotColdAnalyzer } from '../prediction-engine/analysis/HotColdAnalyzer';
-import { DrawLocationAnalyzer } from '../prediction-engine/analysis/DrawLocationAnalyzer';
 import type { Draw } from '../utils/scoringSystem';
+import type { HotColdAnalysis } from '../prediction-engine/types';
 
 interface HotColdChartProps {
   draws: Draw[];
@@ -10,9 +10,9 @@ interface HotColdChartProps {
 const HotColdChart: React.FC<HotColdChartProps> = ({ draws }) => {
   const [hotColdAnalyzer] = useState(() => new HotColdAnalyzer(draws));
   const [selectedRange, setSelectedRange] = useState(30);
-  const [hotNumbers, setHotNumbers] = useState<any[]>([]);
-  const [coldNumbers, setColdNumbers] = useState<any[]>([]);
-  const [heatDistribution, setHeatDistribution] = useState<any[]>([]);
+  const [hotNumbers, setHotNumbers] = useState<HotColdAnalysis[]>([]);
+  const [coldNumbers, setColdNumbers] = useState<HotColdAnalysis[]>([]);
+  const [heatDistribution, setHeatDistribution] = useState<{ range: string; count: number }[]>([]);
 
   useEffect(() => {
     updateAnalysis();
@@ -26,16 +26,6 @@ const HotColdChart: React.FC<HotColdChartProps> = ({ draws }) => {
     setHotNumbers(hot);
     setColdNumbers(cold);
     setHeatDistribution(heatDist);
-  };
-
-  const getHeatColor = (status: string): string => {
-    switch (status) {
-      case 'hot': return 'bg-red-500';
-      case 'warm': return 'bg-yellow-500';
-      case 'cold': return 'bg-blue-500';
-      case 'frozen': return 'bg-gray-700';
-      default: return 'bg-gray-400';
-    }
   };
 
   const getHeatTextColor = (status: string): string => {
@@ -127,7 +117,7 @@ const HotColdChart: React.FC<HotColdChartProps> = ({ draws }) => {
             <h4 className="font-medium mb-3">By Status</h4>
             <div className="space-y-2">
               {['hot', 'warm', 'cold', 'frozen'].map(status => {
-                const count = hotColdAnalyzer.getNumbersByStatus(status as any).length;
+                const count = hotColdAnalyzer.getNumbersByStatus(status as 'hot' | 'warm' | 'cold' | 'frozen').length;
                 return (
                   <div key={status} className="flex justify-between items-center">
                     <span className={`capitalize ${getHeatTextColor(status)}`}>{status}</span>

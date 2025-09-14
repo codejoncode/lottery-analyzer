@@ -71,7 +71,6 @@ const PairsAnalysis: React.FC<PairsAnalysisProps> = ({ className = '' }) => {
       if (!draw) return;
 
       const pairs = [draw.front, draw.split, draw.back];
-      const positions = ['front', 'split', 'back'];
 
       pairs.forEach((pair, pairIndex) => {
         const existing = analysis.get(pair);
@@ -100,23 +99,6 @@ const PairsAnalysis: React.FC<PairsAnalysisProps> = ({ className = '' }) => {
 
     return analysis;
   }, [parsedDraws, allPairs]);
-
-  const uniquePairs = useMemo(() => {
-    const unique = new Map<string, PairData>();
-
-    // For 5x9 grid, we only show pairs where first digit <= second digit
-    for (let i = 0; i <= 9; i++) {
-      for (let j = i; j <= 9; j++) {
-        const pair = `${i}${j}`;
-        const data = pairsAnalysis.get(pair);
-        if (data) {
-          unique.set(pair, data);
-        }
-      }
-    }
-
-    return unique;
-  }, [pairsAnalysis]);
 
   const getSkipColor = (skipCount: number) => {
     if (skipCount === 0) return 'current';

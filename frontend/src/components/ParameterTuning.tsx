@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { pick3Analyzer } from '../utils/pick3Analyzer';
 
 interface Parameter {
   name: string;
@@ -87,7 +86,7 @@ const ParameterTuning: React.FC = () => {
 
   const [tuningResults, setTuningResults] = useState<TuningResult[]>([]);
   const [isOptimizing, setIsOptimizing] = useState(false);
-  const [baselineScore, setBaselineScore] = useState(0.72);
+  const [baselineScore] = useState(0.72);
   const [currentScore, setCurrentScore] = useState(0.72);
 
   const updateParameter = (name: string, value: number) => {

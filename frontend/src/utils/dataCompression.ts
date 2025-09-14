@@ -8,11 +8,26 @@ export interface CompressionStats {
   decompressionTime: number;
 }
 
+export interface RunLengthPair {
+  value: number;
+  count: number;
+}
+
+export type RunLengthEncodedData = RunLengthPair[][];
+
+export interface DeltaEncodedData {
+  type: 'delta';
+  firstDraw: Draw;
+  deltas: number[][];
+  dates: string[];
+  powerPlays: string[];
+}
+
 export class DataCompressionManager {
   /**
    * Compress draw data using run-length encoding for repeated patterns
    */
-  static compressDraws(draws: Draw[]): { compressed: any[], stats: CompressionStats } {
+  static compressDraws(draws: Draw[]): { compressed: RunLengthEncodedData, stats: CompressionStats } {
     const startTime = performance.now();
 
     // Convert draws to a more compressible format
@@ -42,7 +57,7 @@ export class DataCompressionManager {
   /**
    * Decompress draw data
    */
-  static decompressDraws(compressed: any[], originalDates: string[], originalPowerPlays: string[]): { draws: Draw[], stats: CompressionStats } {
+  static decompressDraws(compressed: RunLengthEncodedData, originalDates: string[], originalPowerPlays: string[]): { draws: Draw[], stats: CompressionStats } {
     const startTime = performance.now();
 
     // Decompress the number sequences
@@ -77,11 +92,11 @@ export class DataCompressionManager {
   /**
    * Run-length encoding for number sequences
    */
-  private static runLengthEncode(data: number[][]): any[] {
-    const encoded: any[] = [];
+  private static runLengthEncode(data: number[][]): RunLengthEncodedData {
+    const encoded: RunLengthEncodedData = [];
 
     data.forEach(sequence => {
-      const encodedSequence: any[] = [];
+      const encodedSequence: RunLengthPair[] = [];
       let currentValue = sequence[0];
       let count = 1;
 
@@ -89,12 +104,12 @@ export class DataCompressionManager {
         if (sequence[i] === currentValue) {
           count++;
         } else {
-          encodedSequence.push([currentValue, count]);
+          encodedSequence.push({ value: currentValue, count });
           currentValue = sequence[i];
           count = 1;
         }
       }
-      encodedSequence.push([currentValue, count]);
+      encodedSequence.push({ value: currentValue, count });
       encoded.push(encodedSequence);
     });
 
@@ -104,14 +119,14 @@ export class DataCompressionManager {
   /**
    * Run-length decoding for number sequences
    */
-  private static runLengthDecode(encoded: any[]): number[][] {
+  private static runLengthDecode(encoded: RunLengthEncodedData): number[][] {
     const decoded: number[][] = [];
 
     encoded.forEach(encodedSequence => {
       const sequence: number[] = [];
-      encodedSequence.forEach(([value, count]: [number, number]) => {
-        for (let i = 0; i < count; i++) {
-          sequence.push(value);
+      encodedSequence.forEach((pair: RunLengthPair) => {
+        for (let i = 0; i < pair.count; i++) {
+          sequence.push(pair.value);
         }
       });
       decoded.push(sequence);
@@ -123,7 +138,7 @@ export class DataCompressionManager {
   /**
    * Compress using delta encoding (store differences instead of absolute values)
    */
-  static compressWithDeltaEncoding(draws: Draw[]): { compressed: any, stats: CompressionStats } {
+  static compressWithDeltaEncoding(draws: Draw[]): { compressed: DeltaEncodedData, stats: CompressionStats } {
     const startTime = performance.now();
 
     const numbers = draws.map(draw => [...draw.white_balls, draw.red_ball]);
@@ -137,7 +152,7 @@ export class DataCompressionManager {
       deltas.push(deltaSequence);
     });
 
-    const compressed = {
+    const compressed: DeltaEncodedData = {
       type: 'delta',
       firstDraw: draws[0],
       deltas,
@@ -165,7 +180,7 @@ export class DataCompressionManager {
   /**
    * Decompress delta-encoded data
    */
-  static decompressDeltaEncoding(compressed: any): { draws: Draw[], stats: CompressionStats } {
+  static decompressDeltaEncoding(compressed: DeltaEncodedData): { draws: Draw[], stats: CompressionStats } {
     const startTime = performance.now();
 
     const { deltas, dates, powerPlays } = compressed;

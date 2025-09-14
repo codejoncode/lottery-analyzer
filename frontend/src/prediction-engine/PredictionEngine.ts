@@ -2,9 +2,10 @@ import type { Draw } from '../utils/scoringSystem';
 import type {
   PredictionResult,
   Combination,
-  ScoringWeights
+  ScoringWeights,
+  FilterConfig
 } from './types';
-import { FilterManager } from './filters';
+import { FilterManager, type FilterConfigUnion } from './filters';
 import { ComboScorer } from './scoring/ComboScorer';
 
 /**
@@ -279,19 +280,20 @@ export class PredictionEngine {
   }
 
   /**
+  /**
    * Get filter configurations
    */
-  getFilterConfigs() {
-    return this.filterManager.getFilterConfigs();
+  getFilterConfigs(): FilterConfig[] {
+    // FilterManager returns a Record keyed by filter id; convert to an array of configs for callers
+    return Object.values(this.filterManager.getFilterConfigs()) as FilterConfig[];
   }
 
   /**
    * Update filter configuration
    */
-  setFilterConfig(filterId: string, config: any): boolean {
+  setFilterConfig(filterId: string, config: FilterConfigUnion): boolean {
     return this.filterManager.setFilterConfig(filterId, config);
   }
-
   /**
    * Get current scoring weights
    */

@@ -1,5 +1,17 @@
-import { performanceOptimizer, withPerformanceMonitoring } from './performanceOptimizer';
-import type { PerformanceMetrics } from './performanceOptimizer';
+// Type declaration for Node.js Timer
+type NodeJSTimer = ReturnType<typeof setTimeout>;
+
+export interface ComputationMetadata {
+  [key: string]: string | number | boolean | null | undefined;
+}
+
+export interface ExtendedPerformance extends Performance {
+  memory?: {
+    usedJSHeapSize: number;
+    totalJSHeapSize: number;
+    jsHeapSizeLimit: number;
+  };
+}
 
 export interface ComputationMetrics {
   operationId: string;
@@ -14,7 +26,7 @@ export interface ComputationMetrics {
   memoryPeak: number;
   status: 'running' | 'completed' | 'failed' | 'cancelled';
   error?: string;
-  metadata?: Record<string, any>;
+  metadata?: ComputationMetadata;
 }
 
 export interface ComputationMonitorOptions {
@@ -58,7 +70,7 @@ export class ComputationTimeMonitor {
   private activeOperations = new Map<string, ComputationMetrics>();
   private alerts: ComputationAlert[] = [];
   private options: ComputationMonitorOptions;
-  private cleanupTimer: NodeJS.Timeout | null = null;
+  private cleanupTimer: NodeJSTimer | null = null;
 
   constructor(options: Partial<ComputationMonitorOptions> = {}) {
     this.options = {
@@ -80,7 +92,7 @@ export class ComputationTimeMonitor {
     operationId: string,
     operationName: string,
     inputSize: number = 0,
-    metadata?: Record<string, any>
+    metadata?: ComputationMetadata
   ): string {
     // Sample based on sample rate
     if (Math.random() > this.options.sampleRate) {
@@ -161,7 +173,7 @@ export class ComputationTimeMonitor {
     operationName: string,
     computation: () => Promise<T>,
     inputSize: number = 0,
-    metadata?: Record<string, any>
+    metadata?: ComputationMetadata
   ): Promise<T> {
     this.startComputation(operationId, operationName, inputSize, metadata);
 
@@ -198,7 +210,7 @@ export class ComputationTimeMonitor {
    */
   private getMemoryUsage(): number {
     if ('memory' in performance) {
-      return (performance as any).memory.usedJSHeapSize / 1024 / 1024; // MB
+      return (performance as ExtendedPerformance).memory!.usedJSHeapSize / 1024 / 1024; // MB
     }
     return 0;
   }
@@ -206,7 +218,7 @@ export class ComputationTimeMonitor {
   /**
    * Estimate output size
    */
-  private estimateOutputSize(result: any): number {
+  private estimateOutputSize(result: unknown): number {
     if (Array.isArray(result)) {
       return result.length;
     }
@@ -226,12 +238,11 @@ export class ComputationTimeMonitor {
    * Estimate computational complexity
    */
   private estimateComplexity(metrics: ComputationMetrics): number {
-    const { inputSize, outputSize, duration } = metrics;
+    const { inputSize, duration } = metrics;
 
     if (inputSize === 0) return 0;
 
     // Simple heuristic: complexity increases with input size and duration
-    const sizeRatio = outputSize / inputSize;
     const timePerItem = duration / inputSize;
 
     // Classify complexity
@@ -469,7 +480,7 @@ export const monitorComputation = async <T>(
   operationName: string,
   computation: () => Promise<T>,
   inputSize?: number,
-  metadata?: Record<string, any>
+  metadata?: ComputationMetadata
 ): Promise<T> => {
   return computationTimeMonitor.monitorComputation(operationId, operationName, computation, inputSize, metadata);
 };
@@ -478,7 +489,7 @@ export const startComputationMonitoring = (
   operationId: string,
   operationName: string,
   inputSize?: number,
-  metadata?: Record<string, any>
+  metadata?: ComputationMetadata
 ): string => {
   return computationTimeMonitor.startComputation(operationId, operationName, inputSize, metadata);
 };

@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { PowerballScoringSystem, DataManager } from '../utils/scoringSystem';
+import { PowerballScoringSystem, DataManager, type Draw } from '../utils/scoringSystem';
 import { HoverAnalysis } from './HoverAnalysis';
 
 interface DrawSummaryPageProps {
-  selectedDraw?: any;
-  onDrawSelect?: (draw: any) => void;
+  selectedDraw?: Draw;
+  onDrawSelect?: (draw: Draw) => void;
 }
 
 const DrawSummaryPage: React.FC<DrawSummaryPageProps> = ({
   selectedDraw,
   onDrawSelect
 }) => {
-  const [draws, setDraws] = useState<any[]>([]);
-  const [selectedDrawData, setSelectedDrawData] = useState<any>(selectedDraw);
+  const [draws, setDraws] = useState<Draw[]>([]);
+  const [selectedDrawData, setSelectedDrawData] = useState<Draw | undefined>(selectedDraw);
   const [loading, setLoading] = useState(true);
   const [scoringSystem] = useState(() => new PowerballScoringSystem());
 
@@ -38,14 +38,14 @@ const DrawSummaryPage: React.FC<DrawSummaryPageProps> = ({
     }
   };
 
-  const handleDrawClick = (draw: any) => {
+  const handleDrawClick = (draw: Draw) => {
     setSelectedDrawData(draw);
     if (onDrawSelect) {
       onDrawSelect(draw);
     }
   };
 
-  const renderDrawCard = (draw: any, index: number) => {
+  const renderDrawCard = (draw: Draw, index: number) => {
     const whiteBalls = draw.white_balls;
     const powerball = draw.red_ball;
     const sum = whiteBalls.reduce((a: number, b: number) => a + b, 0);
@@ -258,7 +258,7 @@ const DrawSummaryPage: React.FC<DrawSummaryPageProps> = ({
     return true;
   };
 
-  const checkConsecutive = (number: number, draw: any, column: number): boolean => {
+  const checkConsecutive = (number: number, draw: Draw, _column: number): boolean => {
     const allNumbers = [...draw.white_balls, draw.red_ball];
     return allNumbers.some(n => Math.abs(n - number) === 1);
   };

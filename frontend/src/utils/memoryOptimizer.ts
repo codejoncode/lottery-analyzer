@@ -1,5 +1,20 @@
 import { performanceOptimizer, withPerformanceMonitoring } from './performanceOptimizer';
 
+// Type declaration for Node.js Timer
+type NodeJSTimer = ReturnType<typeof setTimeout>;
+
+export interface ExtendedPerformance extends Performance {
+  memory?: {
+    usedJSHeapSize: number;
+    totalJSHeapSize: number;
+    jsHeapSizeLimit: number;
+  };
+}
+
+export interface ExtendedWindow extends Window {
+  gc?: () => void;
+}
+
 export interface MemoryStats {
   used: number;
   total: number;
@@ -16,12 +31,13 @@ export interface MemoryOptimizationOptions {
   compressionThreshold: number; // MB
 }
 
-export interface CompressedData<T> {
+export interface CompressedData<T = unknown> {
   data: T;
   compressed: boolean;
   originalSize: number;
   compressedSize: number;
   compressionRatio: number;
+  timestamp?: number;
 }
 
 /**
@@ -29,8 +45,8 @@ export interface CompressedData<T> {
  */
 export class MemoryOptimizer {
   private options: MemoryOptimizationOptions;
-  private cleanupTimer: NodeJS.Timeout | null = null;
-  private compressedData = new Map<string, CompressedData<any>>();
+  private cleanupTimer: NodeJSTimer | null = null;
+  private compressedData = new Map<string, CompressedData>();
   private weakRefs = new WeakMap<object, { lastAccessed: number; size: number }>();
   private memoryHistory: MemoryStats[] = [];
 
@@ -80,7 +96,7 @@ export class MemoryOptimizer {
    */
   private getCurrentMemoryUsage(): number {
     if ('memory' in performance) {
-      return (performance as any).memory.usedJSHeapSize;
+      return (performance as ExtendedPerformance).memory!.usedJSHeapSize;
     }
 
     // Fallback: estimate based on compressed data size
@@ -179,18 +195,18 @@ export class MemoryOptimizer {
     if (!compressedData) return null;
 
     if (!compressedData.compressed) {
-      return compressedData.data;
+      return compressedData.data as T;
     }
 
     return withPerformanceMonitoring('DataDecompression', async () => {
       try {
         // Simple decompression (reverse of compression)
-        const jsonString = atob(compressedData.data as any);
+        const jsonString = atob(compressedData.data as string);
         const data = JSON.parse(jsonString);
 
         console.log(`📦 Decompressed data "${key}"`);
 
-        return data;
+        return data as T;
       } catch (error) {
         console.error('Decompression failed:', error);
         return null;
@@ -201,7 +217,7 @@ export class MemoryOptimizer {
   /**
    * Estimate data size in bytes
    */
-  private estimateDataSize(data: any): number {
+  private estimateDataSize(data: unknown): number {
     const jsonString = JSON.stringify(data);
     return jsonString.length * 2; // Rough estimate: 2 bytes per character
   }
@@ -225,7 +241,7 @@ export class MemoryOptimizer {
    */
   forceGC(): void {
     if (this.options.enableGC && 'gc' in window) {
-      (window as any).gc();
+      (window as ExtendedWindow).gc!();
       console.log('🧹 Forced garbage collection');
     }
   }
@@ -262,7 +278,7 @@ export class MemoryOptimizer {
 
     for (const [key, data] of this.compressedData.entries()) {
       // Remove data that's been compressed for too long
-      if (now - (data as any).timestamp > maxAge) {
+      if (data.timestamp && now - data.timestamp > maxAge) {
         this.compressedData.delete(key);
       }
     }
@@ -276,8 +292,6 @@ export class MemoryOptimizer {
   private cleanupWeakRefs(): void {
     // WeakMap automatically cleans up when objects are garbage collected
     // We just need to track access patterns
-    const now = Date.now();
-    const maxAge = 30 * 60 * 1000; // 30 minutes
 
     // Note: In a real implementation, we'd iterate through weak refs
     // but WeakMap doesn't allow enumeration, so we use a different approach

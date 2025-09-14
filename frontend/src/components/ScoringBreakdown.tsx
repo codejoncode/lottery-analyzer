@@ -7,9 +7,22 @@ interface ScoringBreakdownProps {
   scorer: ComboScorer;
 }
 
+interface ScoreBreakdown {
+  totalScore: number;
+  components: {
+    recurrenceScore: number;
+    skipScore: number;
+    pairScore: number;
+    tripleScore: number;
+  };
+  strengths: string[];
+  weaknesses: string[];
+  recommendations: string;
+}
+
 const ScoringBreakdown: React.FC<ScoringBreakdownProps> = ({ combinations, scorer }) => {
   const [selectedCombo, setSelectedCombo] = useState<Combination | null>(null);
-  const [breakdown, setBreakdown] = useState<any>(null);
+  const [breakdown, setBreakdown] = useState<ScoreBreakdown | null>(null);
 
   useEffect(() => {
     if (selectedCombo) {
@@ -98,7 +111,7 @@ const ScoringBreakdown: React.FC<ScoringBreakdownProps> = ({ combinations, score
           <div className="mb-6">
             <h3 className="text-lg font-medium mb-4">Score Components</h3>
             <div className="space-y-4">
-              {breakdown.components && Object.entries(breakdown.components).map(([component, score]: [string, any]) => (
+              {breakdown.components && Object.entries(breakdown.components).map(([component, score]: [string, number]) => (
                 <div key={component} className="border rounded-lg p-4">
                   <div className="flex justify-between items-center mb-2">
                     <span className="font-medium capitalize">{component.replace(/([A-Z])/g, ' $1')}</span>

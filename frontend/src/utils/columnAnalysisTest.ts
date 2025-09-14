@@ -62,7 +62,7 @@ export const testColumnAnalysis = async () => {
 };
 
 // Auto-run test in development
-if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+if (typeof window !== 'undefined' && import.meta.env.DEV) {
   // Run test after a short delay to ensure DOM is ready
   setTimeout(testColumnAnalysis, 1000);
 }

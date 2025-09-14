@@ -48,7 +48,7 @@ export class BacktestEngine {
     const startTime = performance.now();
 
     // Generate predictions
-    const predictionResult = await this.predictionEngine.generatePredictions({
+    const predictionResult: PredictionResult = await this.predictionEngine.generatePredictions({
       maxCombinations: options.maxPredictions || 100,
       enabledFilters: options.enabledFilters || [],
       minScore: options.minScore || 0
@@ -179,6 +179,7 @@ export class BacktestEngine {
   getBacktestStatistics(results: BacktestResult[] = this.results): {
     totalDraws: number;
     averageAccuracy: number;
+    averageScore: number;
     totalHits: BacktestResult['hits'];
     hitRates: { [key: string]: number };
     averageProcessingTime: number;
@@ -190,6 +191,7 @@ export class BacktestEngine {
       return {
         totalDraws: 0,
         averageAccuracy: 0,
+        averageScore: 0,
         totalHits: { '1-match': 0, '2-match': 0, '3-match': 0, '4-match': 0, '5-match': 0 },
         hitRates: {},
         averageProcessingTime: 0,
@@ -227,7 +229,7 @@ export class BacktestEngine {
     let bestDraw = { index: -1, accuracy: -1, date: '' };
     let worstDraw = { index: -1, accuracy: 2, date: '' };
 
-    results.forEach((result, index) => {
+    results.forEach((result, _index) => {
       if (result.accuracy > bestDraw.accuracy) {
         bestDraw = { index: result.drawId, accuracy: result.accuracy, date: result.drawDate };
       }
@@ -238,10 +240,12 @@ export class BacktestEngine {
 
     // Calculate score correlation (simplified)
     const scoreCorrelation = this.calculateScoreCorrelation(results);
+    const averageScore = results.reduce((sum, r) => sum + r.averageScore, 0) / totalDraws;
 
     return {
       totalDraws,
       averageAccuracy,
+      averageScore,
       totalHits,
       hitRates,
       averageProcessingTime,

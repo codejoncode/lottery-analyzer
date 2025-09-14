@@ -14,6 +14,8 @@ interface Combination {
   highLowPattern: string;
 }
 
+type FilterValue = 'all' | 'single' | 'double' | 'triple' | number | number[] | string[];
+
 const Deflate: React.FC<DeflateProps> = ({ className = '' }) => {
   const [inputCombinations, setInputCombinations] = useState<string>('');
   const [filters, setFilters] = useState({
@@ -119,17 +121,21 @@ const Deflate: React.FC<DeflateProps> = ({ className = '' }) => {
     };
   }, [parsedCombinations, uniqueBoxCombinations, filteredCombinations]);
 
-  const updateFilter = (key: string, value: any) => {
+  const updateFilter = (key: string, value: FilterValue) => {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
 
-  const toggleArrayFilter = (key: keyof typeof filters, value: any) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: (prev[key] as any[]).includes(value)
-        ? (prev[key] as any[]).filter(item => item !== value)
-        : [...(prev[key] as any[]), value]
-    }));
+  const toggleArrayFilter = (key: keyof typeof filters, value: number | string) => {
+    setFilters(prev => {
+      const currentArray = prev[key] as (number | string)[];
+      const isIncluded = currentArray.includes(value);
+      return {
+        ...prev,
+        [key]: isIncluded
+          ? currentArray.filter(item => item !== value)
+          : [...currentArray, value]
+      };
+    });
   };
 
   const clearFilters = () => {
@@ -184,7 +190,7 @@ const Deflate: React.FC<DeflateProps> = ({ className = '' }) => {
             <label>Type:</label>
             <select
               value={filters.type}
-              onChange={(e) => updateFilter('type', e.target.value)}
+              onChange={(e) => updateFilter('type', e.target.value as 'all' | 'single' | 'double' | 'triple')}
             >
               <option value="all">All Types</option>
               <option value="single">Singles (6-way)</option>

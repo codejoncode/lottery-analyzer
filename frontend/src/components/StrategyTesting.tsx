@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { pick3Analyzer } from '../utils/pick3Analyzer';
 
 interface StrategyTest {
   id: string;
   name: string;
   description: string;
-  parameters: Record<string, any>;
+  parameters: Record<string, number | string | boolean>;
   results: {
     accuracy: number;
     hitRate: number;
@@ -15,11 +14,21 @@ interface StrategyTest {
   status: 'pending' | 'running' | 'completed' | 'failed';
 }
 
+interface TestResult {
+  sampleSize: number;
+  executionTime: number;
+  testDate: string;
+  accuracy?: number;
+  hitRate?: number;
+  roi?: number;
+  confidence?: number;
+}
+
 const StrategyTesting: React.FC = () => {
   const [strategies, setStrategies] = useState<StrategyTest[]>([]);
   const [selectedStrategy, setSelectedStrategy] = useState<StrategyTest | null>(null);
   const [runningTests, setRunningTests] = useState<Set<string>>(new Set());
-  const [testResults, setTestResults] = useState<Record<string, any>>({});
+  const [testResults, setTestResults] = useState<Record<string, TestResult>>({});
 
   const predefinedStrategies: Omit<StrategyTest, 'results' | 'status'>[] = [
     {
@@ -129,7 +138,7 @@ const StrategyTesting: React.FC = () => {
         }
       }));
 
-    } catch (error) {
+    } catch {
       setStrategies(prev => prev.map(strategy =>
         strategy.id === strategyId
           ? { ...strategy, status: 'failed' as const }

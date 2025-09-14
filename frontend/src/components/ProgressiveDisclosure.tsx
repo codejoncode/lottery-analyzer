@@ -134,27 +134,10 @@ export interface AccordionProps {
 
 export const Accordion: React.FC<AccordionProps> = ({
   items,
-  allowMultiple = false,
+  allowMultiple: _allowMultiple = false,
   className = ''
 }) => {
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(
-    new Set(items.filter(item => item.defaultExpanded).map(item => item.id))
-  );
-
-  const toggleItem = (id: string) => {
-    setExpandedItems(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        if (!allowMultiple) {
-          newSet.clear();
-        }
-        newSet.add(id);
-      }
-      return newSet;
-    });
-  };
+  const expandedItems = new Set(items.filter(item => item.defaultExpanded).map(item => item.id));
 
   return (
     <div className={`flex flex-col gap-1 ${className}`}>

@@ -17,7 +17,7 @@ export interface PredictionFilter<T extends FilterConfig = FilterConfig> {
 
 export interface FilterConfig {
   enabled: boolean;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface SumFilterConfig extends FilterConfig {
@@ -84,6 +84,19 @@ export interface PredictionResult {
   };
 }
 
+export interface PredictionStats {
+  scoreDistribution: { range: string; count: number }[];
+  topNumbers: { number: number; frequency: number }[];
+  sumDistribution: { range: string; count: number }[];
+  averageMetrics: {
+    sum: number;
+    oddCount: number;
+    highCount: number;
+    score: number;
+    confidence: number;
+  };
+}
+
 export interface BacktestResult {
   drawId: number;
   drawDate: string;
@@ -122,6 +135,23 @@ export interface DrawLocationAnalysis {
   confidence: number;
   sumRange: [number, number];
   patternStrength: number;
+}
+
+// ============================================================================
+// DRAW LOCATION ANALYSIS INTERFACES
+// ============================================================================
+
+export interface OverUnderAnalysis {
+  overCount: number;
+  underCount: number;
+  averageDeviation: number;
+  recentTrend: 'over' | 'under' | 'balanced';
+}
+
+export interface DrawIndexRange {
+  start: number;
+  end: number;
+  total: number;
 }
 
 // ============================================================================
@@ -244,4 +274,98 @@ export class PredictionUtils {
     }
     return tripleCount;
   }
+}
+
+// ============================================================================
+// BACKTESTING INTERFACES
+// ============================================================================
+
+export interface BacktestStatistics {
+  totalDraws: number;
+  averageAccuracy: number;
+  averageScore: number;
+  totalHits: BacktestResult['hits'];
+  hitRates: { [key: string]: number };
+  averageProcessingTime: number;
+  bestDraw: { index: number; accuracy: number; date: string };
+  worstDraw: { index: number; accuracy: number; date: string };
+  scoreCorrelation: number;
+}
+
+export interface ValidationResults {
+  accuracySignificance: {
+    pValue: number;
+    isSignificant: boolean;
+    confidence: number;
+    effectSize: number;
+  };
+  hitRateSignificance: {
+    [key: string]: {
+      pValue: number;
+      isSignificant: boolean;
+      expectedRate: number;
+      observedRate: number;
+    };
+  };
+  temporalStability: {
+    autocorrelation: number;
+    trendSignificance: number;
+    volatility: number;
+  };
+}
+
+// ============================================================================
+// CACHING INTERFACES
+// ============================================================================
+
+export interface CacheEntry<T = unknown> {
+  result: T;
+  timestamp: number;
+  accessCount: number;
+  lastAccessed: number;
+  size: number;
+}
+
+export interface CacheStatistics {
+  size: number;
+  maxSize: number;
+  memoryUsage: number;
+  maxMemory: number;
+  memoryUsagePercent: number;
+  hitRate: number;
+  totalAccesses: number;
+  totalHits: number;
+  averageAge: number;
+  typeDistribution: { [type: string]: number };
+}
+
+export interface CombinationScoresCache {
+  combinations: number[][];
+  scores: Combination[];
+}
+
+export interface FilterResultsCache {
+  combinations: number[][];
+  filters: string[];
+  filtered: number[][];
+}
+
+export interface StatisticsCache {
+  data: number[];
+  stats: unknown;
+}
+
+export interface DebugEntry {
+  key: string;
+  type: string;
+  timestamp: number;
+  lastAccessed: number;
+  accessCount: number;
+  size: number;
+  age: number;
+}
+
+export interface DebugData {
+  stats: CacheStatistics;
+  entries: DebugEntry[];
 }

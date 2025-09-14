@@ -102,7 +102,12 @@ export class ValidationMetrics {
     };
   } {
     const matchTypes = ['1-match', '2-match', '3-match', '4-match', '5-match'];
-    const results: { [key: string]: any } = {};
+    const results: { [key: string]: {
+      pValue: number;
+      isSignificant: boolean;
+      expectedRate: number;
+      observedRate: number;
+    } } = {};
 
     matchTypes.forEach(matchType => {
       const totalPredictions = this.results.reduce((sum, r) => sum + r.predictedCombinations.length, 0);
@@ -306,7 +311,27 @@ export class ValidationMetrics {
   /**
    * Generate recommendations based on statistical analysis
    */
-  private generateRecommendations(significance: any): string[] {
+  private generateRecommendations(significance: {
+    accuracySignificance: {
+      pValue: number;
+      isSignificant: boolean;
+      confidence: number;
+      effectSize: number;
+    };
+    hitRateSignificance: {
+      [key: string]: {
+        pValue: number;
+        isSignificant: boolean;
+        expectedRate: number;
+        observedRate: number;
+      };
+    };
+    temporalStability: {
+      autocorrelation: number;
+      trendSignificance: number;
+      volatility: number;
+    };
+  }): string[] {
     const recommendations: string[] = [];
 
     if (!significance.accuracySignificance.isSignificant) {
@@ -326,7 +351,12 @@ export class ValidationMetrics {
     }
 
     const significantHitRates = Object.entries(significance.hitRateSignificance)
-      .filter(([_, stats]: [string, any]) => stats.isSignificant)
+      .filter(([_, stats]: [string, {
+        pValue: number;
+        isSignificant: boolean;
+        expectedRate: number;
+        observedRate: number;
+      }]) => stats.isSignificant)
       .map(([matchType, _]) => matchType);
 
     if (significantHitRates.length > 0) {

@@ -1,15 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { usePerformanceMonitor } from '../utils/performanceMonitor';
-import { performanceOptimizer } from '../utils/performanceOptimizer';
-import { computationTimeMonitor } from '../utils/computationTimeMonitor';
-import { memoryOptimizer } from '../utils/memoryOptimizer';
+import { type MemoryStats } from '../utils/memoryOptimizer';
 import { comboGenerator } from '../utils/optimizedComboGenerator';
 
 interface OptimizationMetrics {
-  performance: any;
-  computation: any;
-  memory: any;
-  comboGeneration: any;
+  performance: {
+    totalOperations: number;
+    averageDuration: number;
+    totalMemoryUsage: number;
+    slowestOperation: string;
+    memoryEfficiency: number;
+  } | null;
+  computation: {
+    totalOperations: number;
+    activeOperations: number;
+    averageDuration: number;
+    totalAlerts: number;
+    successRate: number;
+    topSlowOperations: Array<{ name: string; averageDuration: number; count: number }>;
+  } | null;
+  memory: MemoryStats | null;
+  comboGeneration: {
+    cachedResults: number;
+    lazyGenerators: number;
+    totalMemoryUsage: number;
+  };
 }
 
 export const PerformanceOptimizationDashboard: React.FC = () => {
@@ -161,7 +176,7 @@ export const PerformanceOptimizationDashboard: React.FC = () => {
             </div>
             <div className="metric">
               <span className="label">Compressed Data:</span>
-              <span className="value">{metrics.memory?.compressedDataCount || 0} items</span>
+              <span className="value">{metrics.memory?.used || 0} MB used</span>
             </div>
           </div>
         </div>
@@ -200,22 +215,22 @@ export const PerformanceOptimizationDashboard: React.FC = () => {
         <div className="recommendations-card">
           <h3>💡 Optimization Recommendations</h3>
           <div className="recommendations">
-            {metrics.memory?.efficiency < 0.5 && (
+            {metrics.memory && metrics.memory.efficiency < 0.5 && (
               <div className="recommendation warning">
                 ⚠️ Memory efficiency is low. Consider reducing cache sizes or implementing data compression.
               </div>
             )}
-            {metrics.memory?.fragmentation > 0.7 && (
+            {metrics.memory && metrics.memory.fragmentation > 0.7 && (
               <div className="recommendation warning">
                 ⚠️ High memory fragmentation detected. Consider defragmenting data structures.
               </div>
             )}
-            {metrics.computation?.totalAlerts > 0 && (
+            {metrics.computation && metrics.computation.totalAlerts > 0 && (
               <div className="recommendation alert">
                 🚨 {metrics.computation.totalAlerts} performance alerts detected. Check slow operations.
               </div>
             )}
-            {metrics.performance?.averageDuration > 1000 && (
+            {metrics.performance && metrics.performance.averageDuration > 1000 && (
               <div className="recommendation info">
                 ℹ️ Average operation time is high. Consider parallel processing or caching.
               </div>

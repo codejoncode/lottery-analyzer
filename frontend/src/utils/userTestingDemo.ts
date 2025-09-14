@@ -1,8 +1,20 @@
 import { UserAcceptanceTestingFramework } from './userAcceptanceTesting';
 import { DataCompressionManager } from './dataCompression';
-import { ColumnAnalyzer, type Draw } from './scoringSystem';
+import { type Draw } from './scoringSystem';
 import fs from 'fs';
 import path from 'path';
+
+// Type declarations for Node.js globals
+declare const process: {
+  cwd(): string;
+  env: Record<string, string | undefined>;
+};
+declare const require: {
+  main: unknown;
+};
+declare const module: {
+  exports: unknown;
+};
 
 /**
  * Demonstration script for User Acceptance Testing and Data Compression
@@ -57,7 +69,7 @@ class UserTestingSimulator {
   async runUserAcceptanceTests(): Promise<void> {
     console.log('\n🚀 Starting User Acceptance Testing Simulation...\n');
 
-    const { results, summary } = await this.uatFramework.runAllTests();
+    const { results } = await this.uatFramework.runAllTests();
 
     console.log('📊 User Acceptance Test Results:');
     console.log('=====================================');
@@ -193,8 +205,6 @@ class UserTestingSimulator {
   async validatePredictionAccuracy(): Promise<void> {
     console.log('\n🎯 Prediction Accuracy Validation:');
     console.log('=====================================');
-
-    const analyzer = new ColumnAnalyzer(this.testData);
 
     // Simulate prediction accuracy testing
     const recentDraws = this.testData.slice(-10); // Last 10 draws

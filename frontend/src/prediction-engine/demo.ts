@@ -1,5 +1,7 @@
 import { PredictionEngine } from './PredictionEngine';
 import type { Draw } from '../utils/scoringSystem';
+import type { Combination, PredictionFilter, PredictionStats } from './types';
+import type { FilterConfigUnion } from './filters';
 
 /**
  * Demo/Test file for the Prediction Engine
@@ -54,7 +56,7 @@ export async function runPredictionDemo(): Promise<void> {
 
   // Show available filters
   const filters = engine.getAvailableFilters();
-  console.log('🔧 Available filters:', filters.map((f: any) => f.name));
+  console.log('🔧 Available filters:', filters.map((f: PredictionFilter<FilterConfigUnion>) => f.name));
 
   // Generate predictions with default settings
   console.log('\n🎯 Generating predictions...');
@@ -83,22 +85,22 @@ export async function runPredictionDemo(): Promise<void> {
 
   // Show top 5 predictions
   console.log('\n🏆 Top 5 Predictions:');
-  result.combinations.slice(0, 5).forEach((combo: any, index: number) => {
+  result.combinations.slice(0, 5).forEach((combo: Combination, index: number) => {
     console.log(`${index + 1}. ${combo.numbers.join(' ')} (Score: ${combo.compositeScore.toFixed(1)}, Confidence: ${combo.confidence.toFixed(2)})`);
     console.log(`   Reasoning: ${combo.reasoning.slice(0, 2).join('; ')}`);
   });
 
   // Show prediction statistics
-  const stats = engine.getPredictionStats(result.combinations);
+  const stats: PredictionStats = engine.getPredictionStats(result.combinations);
   console.log('\n📈 Prediction Statistics:');
 
   console.log('Score Distribution:');
-  stats.scoreDistribution.forEach((dist: any) => {
+  stats.scoreDistribution.forEach((dist: { range: string; count: number }) => {
     console.log(`  ${dist.range}: ${dist.count} combinations`);
   });
 
   console.log('\nTop 5 Most Frequent Numbers:');
-  stats.topNumbers.slice(0, 5).forEach((num: any) => {
+  stats.topNumbers.slice(0, 5).forEach((num: { number: number; frequency: number }) => {
     console.log(`  ${num.number}: ${num.frequency} appearances`);
   });
 
@@ -154,7 +156,7 @@ export async function runAdvancedDemo(): Promise<void> {
   });
 
   console.log('\n🏆 Top Predictions with Custom Weights:');
-  result.combinations.slice(0, 5).forEach((combo: any, index: number) => {
+  result.combinations.slice(0, 5).forEach((combo: Combination, index: number) => {
     console.log(`${index + 1}. ${combo.numbers.join(' ')} (Score: ${combo.compositeScore.toFixed(1)})`);
   });
 

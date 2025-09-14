@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { pick3Analyzer } from '../utils/pick3Analyzer';
 
 interface ScoringFactor {
   name: string;
@@ -19,7 +18,6 @@ interface CombinationScore {
 }
 
 const LiveScoring: React.FC = () => {
-  const analyzer = pick3Analyzer;
   const [topCombinations, setTopCombinations] = useState<CombinationScore[]>([]);
   const [selectedCombination, setSelectedCombination] = useState<CombinationScore | null>(null);
   const [loading, setLoading] = useState(false);
@@ -51,7 +49,7 @@ const LiveScoring: React.FC = () => {
   const calculateSkipScore = (combo: string): number => {
     const digits = combo.split('').map(Number);
     let score = 0;
-    digits.forEach(digit => {
+    digits.forEach(_digit => {
       const skipFactor = Math.random() * 0.5 + 0.5;
       score += skipFactor;
     });
@@ -65,7 +63,7 @@ const LiveScoring: React.FC = () => {
       combo[0] + combo[2]
     ];
     let score = 0;
-    pairs.forEach(pair => {
+    pairs.forEach(_pair => {
       const pairFrequency = Math.random() * 0.7 + 0.3;
       score += pairFrequency;
     });

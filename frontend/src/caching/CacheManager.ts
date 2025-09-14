@@ -1,5 +1,79 @@
 import { PredictionCache } from './PredictionCache';
 import { ResultCache } from './ResultCache';
+import type { PredictionResult, Combination } from '../prediction-engine/types';
+
+// Type definitions for cache operations
+export interface PredictionOptions {
+  enabledFilters?: string[];
+  maxCombinations?: number;
+  minScore?: number;
+  scoringWeights?: Record<string, number>;
+}
+
+export interface CacheResult {
+  combinations: number[][];
+  scores: number[];
+  metadata?: Record<string, unknown>;
+}
+
+export interface CombinationScores {
+  [key: string]: number;
+}
+
+export interface AnalysisResult {
+  data: unknown;
+  timestamp: number;
+  metadata?: Record<string, unknown>;
+}
+
+export interface StatisticsResult {
+  mean: number;
+  median: number;
+  mode: number[];
+  standardDeviation: number;
+  min: number;
+  max: number;
+  quartiles: [number, number, number];
+  metadata?: Record<string, unknown>;
+}
+
+export interface PredictionCacheStats {
+  size: number;
+  maxSize: number;
+  hitRate: number;
+  totalAccesses: number;
+  totalHits: number;
+  averageAge: number;
+  oldestEntry: number;
+  newestEntry: number;
+}
+
+export interface ResultCacheStats {
+  size: number;
+  maxSize: number;
+  memoryUsage: number;
+  maxMemory: number;
+  memoryUsagePercent: number;
+  hitRate: number;
+  totalAccesses: number;
+  totalHits: number;
+  averageAge: number;
+  typeDistribution: { [type: string]: number };
+}
+
+export interface OverallCacheStats {
+  totalEntries: number;
+  totalMemory: number;
+  hitRate: number;
+  lastOptimized: number;
+}
+
+export interface ComprehensiveCacheStats {
+  isEnabled: boolean;
+  predictionCache: PredictionCacheStats;
+  resultCache: ResultCacheStats;
+  overall: OverallCacheStats;
+}
 
 /**
  * Cache Manager
@@ -49,18 +123,18 @@ export class CacheManager {
   /**
    * Prediction cache operations
    */
-  getPrediction(options: any): any {
+  getPrediction(options: PredictionOptions): PredictionResult | null {
     if (!this.isEnabled) return null;
     return this.predictionCache.get(options);
   }
 
-  setPrediction(options: any, result: any): void {
+  setPrediction(options: PredictionOptions, result: PredictionResult): void {
     if (!this.isEnabled) return;
     this.predictionCache.set(options, result);
     this.checkAutoSave();
   }
 
-  hasPrediction(options: any): boolean {
+  hasPrediction(options: PredictionOptions): boolean {
     if (!this.isEnabled) return false;
     return this.predictionCache.has(options);
   }
@@ -68,18 +142,18 @@ export class CacheManager {
   /**
    * Result cache operations
    */
-  getResult(type: string, params: any): any {
+  getResult(type: string, params: unknown): unknown {
     if (!this.isEnabled) return null;
     return this.resultCache.get(type, params);
   }
 
-  setResult(type: string, params: any, result: any): void {
+  setResult(type: string, params: unknown, result: unknown): void {
     if (!this.isEnabled) return;
     this.resultCache.set(type, params, result);
     this.checkAutoSave();
   }
 
-  hasResult(type: string, params: any): boolean {
+  hasResult(type: string, params: unknown): boolean {
     if (!this.isEnabled) return false;
     return this.resultCache.has(type, params);
   }
@@ -87,13 +161,13 @@ export class CacheManager {
   /**
    * Specialized result cache methods
    */
-  setCombinationScores(combinations: number[][], scores: any): void {
+  setCombinationScores(combinations: number[][], scores: Combination[]): void {
     if (!this.isEnabled) return;
     this.resultCache.setCombinationScores(combinations, scores);
     this.checkAutoSave();
   }
 
-  getCombinationScores(combinations: number[][]): any {
+  getCombinationScores(combinations: number[][]): Combination[] | null {
     if (!this.isEnabled) return null;
     return this.resultCache.getCombinationScores(combinations);
   }
@@ -109,26 +183,26 @@ export class CacheManager {
     return this.resultCache.getFilterResults(combinations, filters);
   }
 
-  setAnalysisResult(analysisType: string, params: any, result: any): void {
+  setAnalysisResult(analysisType: string, params: unknown, result: AnalysisResult): void {
     if (!this.isEnabled) return;
     this.resultCache.setAnalysisResult(analysisType, params, result);
     this.checkAutoSave();
   }
 
-  getAnalysisResult(analysisType: string, params: any): any {
+  getAnalysisResult(analysisType: string, params: unknown): AnalysisResult | null {
     if (!this.isEnabled) return null;
-    return this.resultCache.getAnalysisResult(analysisType, params);
+    return this.resultCache.getAnalysisResult(analysisType, params) as AnalysisResult | null;
   }
 
-  setStatistics(key: string, data: number[], stats: any): void {
+  setStatistics(key: string, data: number[], stats: StatisticsResult): void {
     if (!this.isEnabled) return;
     this.resultCache.setStatistics(key, data, stats);
     this.checkAutoSave();
   }
 
-  getStatistics(key: string, data: number[]): any {
+  getStatistics(key: string, data: number[]): StatisticsResult | null {
     if (!this.isEnabled) return null;
-    return this.resultCache.getStatistics(key, data);
+    return this.resultCache.getStatistics(key, data) as StatisticsResult | null;
   }
 
   /**
@@ -163,17 +237,7 @@ export class CacheManager {
   /**
    * Get comprehensive cache statistics
    */
-  getStats(): {
-    isEnabled: boolean;
-    predictionCache: any;
-    resultCache: any;
-    overall: {
-      totalEntries: number;
-      totalMemory: number;
-      hitRate: number;
-      lastOptimized: number;
-    };
-  } {
+  getStats(): ComprehensiveCacheStats {
     const predictionStats = this.predictionCache.getStats();
     const resultStats = this.resultCache.getStats();
 
@@ -194,6 +258,20 @@ export class CacheManager {
         lastOptimized: this.lastSave
       }
     };
+  }
+
+  /**
+   * Get prediction cache statistics
+   */
+  getPredictionCacheStats(): PredictionCacheStats {
+    return this.predictionCache.getStats();
+  }
+
+  /**
+   * Get result cache statistics
+   */
+  getResultCacheStats(): ResultCacheStats {
+    return this.resultCache.getStats();
   }
 
   /**
@@ -314,7 +392,7 @@ export class CacheManager {
    */
   getDebugInfo(): {
     predictionKeys: string[];
-    resultCacheStats: any;
+    resultCacheStats: ResultCacheStats;
     memoryUsage: string;
     lastSave: string;
   } {

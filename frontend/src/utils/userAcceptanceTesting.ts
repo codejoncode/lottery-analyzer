@@ -15,7 +15,14 @@ export interface UserAcceptanceTestResult {
   duration: number;
   details: string;
   recommendations?: string[];
-  metrics?: Record<string, any>;
+  metrics?: Record<string, unknown>;
+}
+
+export interface UserAcceptanceTestSummary {
+  totalTests: number;
+  passedTests: number;
+  averageScore: number;
+  totalDuration: number;
 }
 
 export class UserAcceptanceTestingFramework {
@@ -252,7 +259,7 @@ export class UserAcceptanceTestingFramework {
     return [...this.tests];
   }
 
-  generateReport(results: UserAcceptanceTestResult[], summary: any): string {
+  generateReport(results: UserAcceptanceTestResult[], summary: UserAcceptanceTestSummary): string {
     const report = [
       '📊 User Acceptance Testing Report',
       '=' .repeat(50),

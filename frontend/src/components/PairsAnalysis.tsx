@@ -43,7 +43,7 @@ const PairsAnalysis: React.FC = () => {
 
         setDraws(parsedDraws);
         setLoading(false);
-      } catch (err) {
+      } catch {
         setError('Failed to load data');
         setLoading(false);
       }
@@ -590,28 +590,22 @@ const PairsAnalysis: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                  {drawPairs.map((pair, pairIndex) => {
-                    const chronologicalIndex = draws.length - index - 1;
-                    const justHit = pair.currentSkips === 0 && pair.totalSkips > 0;
-                    const previousSkips = justHit ? (pair.totalSkips > 0 ? 'was out' : 'first time') : '';
-
-                    return (
-                      <div key={pairIndex} className="bg-gray-50 rounded p-2 text-center">
-                        <div className="font-semibold text-sm">{pair.key}</div>
-                        <div className={`text-xs font-bold ${
-                          pair.currentSkips === 0 ? 'text-green-600' :
-                          pair.currentSkips <= 5 ? 'text-orange-600' : 'text-red-600'
-                        }`}>
-                          {pair.currentSkips === 0 && pair.lastSkipCount > 0
-                            ? pair.lastSkipCount
-                            : pair.currentSkips === 0
-                            ? '0'
-                            : pair.currentSkips
-                          }
-                        </div>
+                  {drawPairs.map((pair, pairIndex) => (
+                    <div key={pairIndex} className="bg-gray-50 rounded p-2 text-center">
+                      <div className="font-semibold text-sm">{pair.key}</div>
+                      <div className={`text-xs font-bold ${
+                        pair.currentSkips === 0 ? 'text-green-600' :
+                        pair.currentSkips <= 5 ? 'text-orange-600' : 'text-red-600'
+                      }`}>
+                        {pair.currentSkips === 0 && pair.lastSkipCount > 0
+                          ? pair.lastSkipCount
+                          : pair.currentSkips === 0
+                          ? '0'
+                          : pair.currentSkips
+                        }
                       </div>
-                    );
-                  })}
+                    </div>
+                  ))}
                 </div>
               </div>
             );

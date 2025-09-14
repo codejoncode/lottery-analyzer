@@ -117,12 +117,9 @@ export class Pick3DataScraper {
     return null;
   }
 
-  private async getMockData(date: string): Promise<{ midday?: string; evening?: string } | null> {
+  private async getMockData(_date: string): Promise<{ midday?: string; evening?: string } | null> {
     // Mock data generator for testing
     // In a real implementation, this would make HTTP requests to lottery websites
-
-    const dateObj = new Date(date);
-    const dayOfWeek = dateObj.getDay();
 
     // Simulate some days having both draws, some having only one
     const hasMidday = Math.random() > 0.1; // 90% chance of midday draw

@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import { pick3Analyzer } from '../utils/pick3Analyzer';
-import type { Pick3Combination } from '../utils/pick3Analyzer';
 
 interface CombinationExplorerProps {
   className?: string;

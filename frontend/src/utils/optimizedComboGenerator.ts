@@ -1,4 +1,3 @@
-import type { Draw } from './scoringSystem';
 import { performanceOptimizer, withPerformanceMonitoring, createLazyLoader } from './performanceOptimizer';
 
 export interface ComboGenerationOptions {
@@ -23,7 +22,7 @@ export interface ComboResult {
 
 export class OptimizedComboGenerator {
   private cache = new Map<string, ComboResult>();
-  private lazyGenerators = new Map<string, any>();
+  private lazyGenerators = new Map<string, unknown>();
 
   /**
    * Generate optimized lottery combinations with performance monitoring
@@ -283,7 +282,6 @@ export class OptimizedComboGenerator {
 
       // Combine results
       const allCombinations: number[][] = [];
-      let totalGenerated = 0;
 
       for (const result of chunkResults) {
         // Filter combinations to ensure they meet global constraints
@@ -300,7 +298,6 @@ export class OptimizedComboGenerator {
         });
 
         allCombinations.push(...validCombos);
-        totalGenerated += validCombos.length;
       }
 
       // Remove duplicates (can happen with overlapping chunks)

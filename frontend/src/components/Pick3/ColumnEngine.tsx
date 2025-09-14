@@ -56,7 +56,7 @@ const ColumnEngine: React.FC<ColumnEngineProps> = ({ className = '' }) => {
     ];
 
     // Build column draws from historical data
-    parsedDraws.forEach((draw, drawIndex) => {
+    parsedDraws.forEach((draw, _drawIndex) => {
       columns.forEach((column, colIndex) => {
         const value = draw.digits[colIndex];
         column.draws.push(value);
@@ -90,14 +90,14 @@ const ColumnEngine: React.FC<ColumnEngineProps> = ({ className = '' }) => {
   const predictions = useMemo(() => {
     if (parsedDraws.length < 3) return null;
 
-    const lastDraw = parsedDraws[parsedDraws.length - 1];
+    // Removed unused variable 'lastDraw'
     const predictions: ColumnPrediction[] = [];
 
     columnTimelines.forEach(column => {
       if (column.draws.length < 2) return;
 
       const lastValue = column.draws[column.draws.length - 1];
-      const secondLastValue = column.draws[column.draws.length - 2];
+      // Removed unused variable 'secondLastValue'
 
       // Find most likely next value based on transition patterns
       const possibleTransitions = Array.from(column.transitions.entries())

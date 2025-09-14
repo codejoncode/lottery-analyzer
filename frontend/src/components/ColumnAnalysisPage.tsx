@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ColumnAnalyzer, DataManager } from '../utils/scoringSystem';
-import type { ColumnAnalysis, ColumnStats, PatternColumnStats, ColumnStatisticalSummary } from '../utils/scoringSystem';
+import type { ColumnAnalysis, ColumnStats, PatternColumnStats } from '../utils/scoringSystem';
 
-interface ColumnAnalysisPageProps {}
-
-export const ColumnAnalysisPage: React.FC<ColumnAnalysisPageProps> = () => {
+export const ColumnAnalysisPage: React.FC = () => {
   const [columnAnalyzer, setColumnAnalyzer] = useState<ColumnAnalyzer | null>(null);
   const [allColumnsAnalysis, setAllColumnsAnalysis] = useState<Map<number, ColumnAnalysis> | null>(null);
   const [selectedColumn, setSelectedColumn] = useState<number>(1);

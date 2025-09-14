@@ -60,7 +60,7 @@ export const DrawDetailModal: React.FC<DrawDetailModalProps> = ({ draw, columnAn
     return num.toString().split('').reduce((sum, digit) => sum + parseInt(digit), 0);
   };
 
-  const checkConsecutive = (number: number, draw: Draw, column: number): boolean => {
+  const checkConsecutive = (number: number, draw: Draw, _column: number): boolean => {
     const allNumbers = [...draw.white_balls, draw.red_ball];
     return allNumbers.some(n => Math.abs(n - number) === 1);
   };
@@ -180,7 +180,6 @@ export const DrawDetailModal: React.FC<DrawDetailModalProps> = ({ draw, columnAn
     const evenCount = whiteBalls.filter(n => n % 2 === 0).length;
     const highCount = whiteBalls.filter(n => n > 34).length;
     const primeCount = whiteBalls.filter(n => isPrimeNumber(n)).length;
-    const consecutiveCount = whiteBalls.filter(n => checkConsecutive(n, draw, whiteBalls.indexOf(n) + 1)).length;
 
     // Calculate column performance
     const columnPerformance = [];

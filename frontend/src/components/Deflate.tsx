@@ -13,14 +13,9 @@ interface Combination {
 }
 
 const Deflate: React.FC = () => {
-  const [consolidatedCombinations, setConsolidatedCombinations] = useState<Combination[]>([]);
+  const consolidatedCombinations: Combination[] = [];
   const [filteredCombinations, setFilteredCombinations] = useState<Combination[]>([]);
   const [activeSubsection, setActiveSubsection] = useState<'consolidation' | 'filter' | 'reduction'>('consolidation');
-
-  const handleConsolidationChange = (combinations: Combination[]) => {
-    setConsolidatedCombinations(combinations);
-    setFilteredCombinations(combinations); // Initially, filtered = consolidated
-  };
 
   const handleFilteredChange = (combinations: Combination[]) => {
     setFilteredCombinations(combinations);

@@ -8,11 +8,7 @@ interface Draw {
   power_play: string;
 }
 
-interface CategoryGroup {
-  name: string;
-  numbers: number[];
-  expectedHits: number; // based on 14 draws and group size
-}
+
 
 const NumberAnalysis: React.FC = () => {
   const [draws, setDraws] = useState<Draw[]>([]);
@@ -122,16 +118,22 @@ const NumberAnalysis: React.FC = () => {
 
     for (let i = 1; i < lines.length; i++) {
       const values = lines[i].split(',');
-      const draw: any = {};
+      const drawData: { [key: string]: string | number | number[] } = {};
       headers.forEach((header, index) => {
         if (header === 'white_balls') {
-          draw[header] = values[index].split('|').map(Number);
+          drawData[header] = values[index].split('|').map(Number);
         } else if (header === 'red_ball') {
-          draw[header] = Number(values[index]);
+          drawData[header] = Number(values[index]);
         } else {
-          draw[header] = values[index];
+          drawData[header] = values[index];
         }
       });
+      const draw: Draw = {
+        date: drawData.date as string || '',
+        white_balls: drawData.white_balls as number[] || [],
+        red_ball: drawData.red_ball as number || 0,
+        power_play: drawData.power_play as string || ''
+      };
       draws.push(draw);
     }
 
@@ -228,68 +230,9 @@ const NumberAnalysis: React.FC = () => {
     return draws.length; // Group has never hit
   };
 
-  const getPatternAnalysis = (section: typeof categorySections[0]) => {
-    const patterns = [
-      { cold: 5, hot: 0, label: '5-0' },
-      { cold: 4, hot: 1, label: '4-1' },
-      { cold: 3, hot: 2, label: '3-2' },
-      { cold: 2, hot: 3, label: '2-3' },
-      { cold: 1, hot: 4, label: '1-4' },
-      { cold: 0, hot: 5, label: '0-5' }
-    ];
-
-    // Analyze only recent draws (last 200) to get meaningful pattern frequencies
-    const recentDraws = draws.slice(0, 200);
-
-    return patterns.map(pattern => {
-      let lifetimeOccurrences = 0;
-      let lastOccurrenceIndex = -1;
-
-      // Analyze each recent draw
-      for (let i = 0; i < recentDraws.length; i++) {
-        const draw = recentDraws[i];
-        let coldHits = 0;
-        let hotHits = 0;
-
-        // Count how many balls from this draw came from cold/due vs hot/over groups
-        draw.white_balls.forEach(ball => {
-          section.groups.forEach(group => {
-            if (group.numbers.includes(ball)) {
-              // Check current status of this group (based on most recent 14 draws)
-              const actualHits = getHitsInLast14Draws(group, draws);
-              const status = getStatus(actualHits, group.expectedHits);
-              if (status.status === 'Cold/Due') coldHits++;
-              else if (status.status === 'Hot/Over') hotHits++;
-            }
-          });
-        });
-
-        // Check if this draw matches the pattern
-        if (coldHits === pattern.cold && hotHits === pattern.hot) {
-          lifetimeOccurrences++;
-          if (lastOccurrenceIndex === -1 || i < lastOccurrenceIndex) {
-            lastOccurrenceIndex = i; // Keep track of most recent occurrence
-          }
-        }
-      }
-
-      const avgLifetimeOccurrence = lifetimeOccurrences > 0 ? (recentDraws.length / lifetimeOccurrences).toFixed(1) : 'N/A';
-      const drawsSince = lastOccurrenceIndex >= 0 ? lastOccurrenceIndex : 'Never';
-
-      return {
-        ...pattern,
-        lifetimeOccurrences,
-        drawsSince,
-        avgLifetimeOccurrence
-      };
-    });
-  };
-
   // Helper functions for Even/Odd and High/Low analysis
   const isEven = (num: number): boolean => num % 2 === 0;
-  const isOdd = (num: number): boolean => num % 2 !== 0;
   const isLow = (num: number): boolean => num >= 1 && num <= 34;
-  const isHigh = (num: number): boolean => num >= 35 && num <= 70;
 
   // Calculate skips for all numbers across all draws
   const calculateNumberSkips = (allDraws: Draw[]): Map<number, { lastSeen: number; totalSkips: number; lastSkipCount: number }> => {

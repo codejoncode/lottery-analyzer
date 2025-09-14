@@ -11,6 +11,7 @@ import type { Route } from "./+types/root";
 import "./app.css";
 import { DataInitializationService } from "../src/services/DataInitializationService";
 import { useEffect } from "react";
+import * as React from "react";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },

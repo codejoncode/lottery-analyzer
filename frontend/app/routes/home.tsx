@@ -1,6 +1,5 @@
 import type { Route } from "./+types/home";
 import { useState } from "react";
-import { Link } from "react-router";
 import ErrorBoundary from "../../src/components/ErrorBoundary";
 import Breadcrumb from "../../src/components/Breadcrumb";
 import LoadingSpinner from "../../src/components/LoadingSpinner";
@@ -29,7 +28,7 @@ import ParameterTuning from "../../src/components/ParameterTuning";
 import HistoricalValidation from "../../src/components/HistoricalValidation";
 import DataSyncManager from "../../src/components/DataSyncManager";
 
-export function meta({}: Route.MetaArgs) {
+export function meta(_: Route.MetaArgs) {
   return [
     { title: "Pick 3 Lottery Analyzer" },
     { name: "description", content: "Advanced Pick 3 lottery analysis and prediction system" },

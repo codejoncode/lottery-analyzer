@@ -1,11 +1,27 @@
 import type { Draw } from '../../utils/scoringSystem';
 import type {
   Combination,
-  ScoringWeights
+  ScoringWeights,
+  HotColdAnalysis,
+  DrawLocationAnalysis
 } from '../types';
 import { DEFAULT_SCORING_WEIGHTS } from '../types';
 import { HotColdAnalyzer } from '../analysis/HotColdAnalyzer';
 import { DrawLocationAnalyzer } from '../analysis/DrawLocationAnalyzer';
+
+/**
+ * Individual score components for reasoning generation
+ */
+interface ScoreComponents {
+  recurrenceScore: number;
+  skipScore: number;
+  pairScore: number;
+  tripleScore: number;
+  sumScore: number;
+  hotColdScore: number;
+  locationScore: number;
+  compositeScore: number;
+}
 
 /**
  * Combo Scoring Engine
@@ -334,7 +350,7 @@ export class ComboScorer {
   /**
    * Calculate location fit score
    */
-  private calculateLocationScore(sum: number): number {
+  private calculateLocationScore(_sum: number): number {
     const locationAnalysis = this.drawLocationAnalyzer.getAnalysis();
     if (!locationAnalysis) return 50;
 
@@ -345,7 +361,7 @@ export class ComboScorer {
   /**
    * Generate reasoning for the score
    */
-  private generateReasoning(scores: any): string[] {
+  private generateReasoning(scores: ScoreComponents): string[] {
     const reasoning: string[] = [];
 
     if (scores.recurrenceScore > 70) {
@@ -410,9 +426,9 @@ export class ComboScorer {
     skipCounts: Map<number, number>;
     commonPairs: number[][];
     commonTriples: number[][];
-    hotNumbers: any[];
-    coldNumbers: any[];
-    locationAnalysis: any;
+    hotNumbers: HotColdAnalysis[];
+    coldNumbers: HotColdAnalysis[];
+    locationAnalysis: DrawLocationAnalysis | null;
   } {
     return {
       skipCounts: new Map(this.skipCounts),

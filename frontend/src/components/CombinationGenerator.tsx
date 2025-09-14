@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { Link } from "react-router";
 
 interface Combination {
@@ -189,7 +189,7 @@ const CombinationGenerator: React.FC = () => {
     return true;
   };
 
-  const updateFilter = (key: keyof FilterCriteria, value: any) => {
+  const updateFilter = (key: keyof FilterCriteria, value: number | string | number[] | number[][] | { min: number; max: number }) => {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
 

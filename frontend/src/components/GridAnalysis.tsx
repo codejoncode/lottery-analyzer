@@ -46,7 +46,7 @@ const GridAnalysis: React.FC = () => {
 
         setDraws(parsedDraws);
         setLoading(false);
-      } catch (err) {
+      } catch {
         setError('Failed to load data');
         setLoading(false);
       }
@@ -60,7 +60,6 @@ const GridAnalysis: React.FC = () => {
     const grids: Grid[] = [];
     const numbersPerGrid = 35; // 5x7 grid
     const totalNumbers = 70;
-    const appearancesPerNumber = 5;
 
     // Create a more robust distribution algorithm
     const gridAssignments: number[][] = Array.from({ length: 10 }, () => []);
@@ -367,7 +366,6 @@ const GridAnalysis: React.FC = () => {
     }
   }, [savedGrids]);
 
-  const recentDraws = draws.slice(0, selectedDraws);
   const hitNumbers = getHitNumbers(selectedDraws);
   const drawsOutMap = getDrawsOut(draws);
 
@@ -549,7 +547,7 @@ const GridAnalysis: React.FC = () => {
 
       {/* Grid Display */}
       <div className="space-y-8">
-        {grids.map((grid, gridIndex) => (
+        {grids.map((grid, _gridIndex) => (
           <div key={grid.id} className="bg-white rounded-lg p-6 shadow-sm">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Grid {grid.id + 1}</h2>

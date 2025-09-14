@@ -1,4 +1,24 @@
-import type { Draw } from './scoringSystem';
+export interface PerformanceMetadata {
+  [key: string]: string | number | boolean | null | undefined;
+}
+
+export interface CacheEntry<T = unknown> {
+  value: T;
+  timestamp: number;
+  ttl: number;
+}
+
+export interface ExtendedPerformance extends Performance {
+  memory?: {
+    usedJSHeapSize: number;
+    totalJSHeapSize: number;
+    jsHeapSizeLimit: number;
+  };
+}
+
+export interface ExtendedWindow extends Window {
+  gc?: () => void;
+}
 
 export interface PerformanceMetrics {
   operationName: string;
@@ -7,7 +27,7 @@ export interface PerformanceMetrics {
   duration: number;
   memoryUsage?: number;
   cpuUsage?: number;
-  metadata?: Record<string, any>;
+  metadata?: PerformanceMetadata;
 }
 
 export interface OptimizationConfig {
@@ -29,8 +49,8 @@ export interface LazyLoader<T> {
 export class PerformanceOptimizer {
   private metrics: PerformanceMetrics[] = [];
   private config: OptimizationConfig;
-  private memoryCache = new Map<string, any>();
-  private lazyLoaders = new Map<string, LazyLoader<any>>();
+  private memoryCache = new Map<string, CacheEntry>();
+  private lazyLoaders = new Map<string, LazyLoader<unknown>>();
   private workers: Worker[] = [];
 
   constructor(config: Partial<OptimizationConfig> = {}) {
@@ -72,7 +92,7 @@ export class PerformanceOptimizer {
   async timeExecution<T>(
     operationName: string,
     fn: () => Promise<T> | T,
-    metadata?: Record<string, any>
+    metadata?: PerformanceMetadata
   ): Promise<T> {
     const startTime = performance.now();
     const startMemory = this.getMemoryUsage();
@@ -115,7 +135,7 @@ export class PerformanceOptimizer {
    */
   private getMemoryUsage(): number {
     if ('memory' in performance) {
-      return (performance as any).memory.usedJSHeapSize / 1024 / 1024; // MB
+      return (performance as ExtendedPerformance).memory!.usedJSHeapSize / 1024 / 1024; // MB
     }
     return 0;
   }
@@ -196,14 +216,12 @@ export class PerformanceOptimizer {
       console.warn(`Large combination set: ${totalCombinations.toLocaleString()} combinations`);
     }
 
-    let generated = 0;
     const batch: number[][] = [];
 
     // Use optimized algorithm for combination generation
     const generateCombination = (start: number, remaining: number, current: number[]): void => {
       if (remaining === 0) {
         batch.push([...current]);
-        generated++;
 
         if (batch.length >= batchSize) {
           // Yield batch and clear
@@ -302,7 +320,7 @@ export class PerformanceOptimizer {
   /**
    * Memory-optimized caching with LRU eviction
    */
-  setCache(key: string, value: any, ttl: number = 300000): void {
+  setCache<T>(key: string, value: T, ttl: number = 300000): void {
     if (this.memoryCache.size >= this.config.cacheSize) {
       // Simple LRU: remove oldest entry
       const firstKey = this.memoryCache.keys().next().value;
@@ -351,7 +369,7 @@ export class PerformanceOptimizer {
 
     // Force garbage collection if available (Chrome/Edge)
     if ('gc' in window) {
-      (window as any).gc();
+      (window as ExtendedWindow).gc!();
     }
 
     console.log(`🧹 Memory optimized. Cache size: ${this.memoryCache.size}, Lazy loaders: ${this.lazyLoaders.size}`);
@@ -425,7 +443,7 @@ export const performanceOptimizer = new PerformanceOptimizer();
 export const withPerformanceMonitoring = async <T>(
   operationName: string,
   fn: () => Promise<T>,
-  metadata?: Record<string, any>
+  metadata?: PerformanceMetadata
 ): Promise<T> => {
   return performanceOptimizer.timeExecution(operationName, fn, metadata);
 };

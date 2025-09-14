@@ -69,8 +69,6 @@ export class Pick3DataManager {
   }
 
   public addDraws(newDraws: Pick3Draw[]): void {
-    const existingDates = new Set(this.data.draws.map(d => d.date));
-
     for (const newDraw of newDraws) {
       const existingIndex = this.data.draws.findIndex(d => d.date === newDraw.date);
 

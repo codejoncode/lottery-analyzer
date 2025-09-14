@@ -234,7 +234,7 @@ export class PredictionValidator {
   /**
    * Calculate confidence interval using Wilson score interval
    */
-  private calculateConfidenceInterval(successes: number, trials: number, confidence: number = 0.95): { lower: number; upper: number } {
+  private calculateConfidenceInterval(successes: number, trials: number, _confidence: number = 0.95): { lower: number; upper: number } {
     if (trials === 0) return { lower: 0, upper: 0 };
 
     const p = successes / trials;

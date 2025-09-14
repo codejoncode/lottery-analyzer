@@ -43,7 +43,7 @@ const TriplesAnalysis: React.FC = () => {
 
         setDraws(parsedDraws);
         setLoading(false);
-      } catch (err) {
+      } catch {
         setError('Failed to load data');
         setLoading(false);
       }
@@ -517,9 +517,8 @@ const TriplesAnalysis: React.FC = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
                   {drawTriples.map((triple, tripleIndex) => {
-                    const chronologicalIndex = draws.length - index - 1;
-                    const justHit = triple.currentSkips === 0 && triple.totalSkips > 0;
-                    const previousSkips = justHit ? (triple.totalSkips > 0 ? 'was out' : 'first time') : '';
+                    // Removed unused variable 'chronologicalIndex'
+                    // Removed unused variable 'justHit'
 
                     return (
                       <div key={tripleIndex} className="bg-gray-50 rounded p-2 text-center">

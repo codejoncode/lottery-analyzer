@@ -7,6 +7,14 @@ export interface PerformanceMetrics {
   cacheHitRate?: number;
 }
 
+interface ExtendedPerformance extends Performance {
+  memory?: {
+    usedJSHeapSize: number;
+    totalJSHeapSize: number;
+    jsHeapSizeLimit: number;
+  };
+}
+
 export class PerformanceBenchmark {
   private columnAnalyzer: ColumnAnalyzer;
   private metrics: PerformanceMetrics[] = [];
@@ -48,7 +56,7 @@ export class PerformanceBenchmark {
    */
   benchmarkCorrelationAnalysis(): PerformanceMetrics {
     const startTime = performance.now();
-    const correlations = this.columnAnalyzer.calculateAllColumnCorrelations();
+    this.columnAnalyzer.calculateAllColumnCorrelations();
     const endTime = performance.now();
 
     const metric: PerformanceMetrics = {
@@ -114,8 +122,8 @@ export class PerformanceBenchmark {
    */
   benchmarkDataExport(): PerformanceMetrics {
     const startTime = performance.now();
-    const jsonData = this.columnAnalyzer.exportColumnData();
-    const csvData = this.columnAnalyzer.exportColumnDataCSV();
+    this.columnAnalyzer.exportColumnData();
+    this.columnAnalyzer.exportColumnDataCSV();
     const endTime = performance.now();
 
     const metric: PerformanceMetrics = {
@@ -198,8 +206,9 @@ export class PerformanceBenchmark {
    * Get current memory usage (if available)
    */
   private getMemoryUsage(): number | undefined {
-    if ('memory' in performance) {
-      return (performance as any).memory.usedJSHeapSize;
+    const extendedPerformance = performance as ExtendedPerformance;
+    if (extendedPerformance.memory) {
+      return extendedPerformance.memory.usedJSHeapSize;
     }
     return undefined;
   }

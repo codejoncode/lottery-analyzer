@@ -61,7 +61,7 @@ export const parseCSVFromText = (csvText: string): Draw[] => {
             power_play: powerPlay
           });
         }
-      } catch (error) {
+      } catch {
         console.warn(`⚠️ Skipping invalid line: ${line}`);
       }
     }

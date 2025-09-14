@@ -14,6 +14,8 @@ interface FilterApplicationProps {
   onFilteredChange: (filtered: Combination[]) => void;
 }
 
+type FilterValue = 'all' | 'single' | 'double' | 'triple' | number | number[] | string[];
+
 const FilterApplication: React.FC<FilterApplicationProps> = ({ combinations, onFilteredChange }) => {
   const [filters, setFilters] = useState({
     type: 'all' as 'all' | 'single' | 'double' | 'triple',
@@ -75,17 +77,21 @@ const FilterApplication: React.FC<FilterApplicationProps> = ({ combinations, onF
     onFilteredChange(filteredCombinations);
   }, [filteredCombinations, onFilteredChange]);
 
-  const updateFilter = (key: string, value: any) => {
+  const updateFilter = (key: string, value: FilterValue) => {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
 
-  const toggleArrayFilter = (key: keyof typeof filters, value: any) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: (prev[key] as any[]).includes(value)
-        ? (prev[key] as any[]).filter(item => item !== value)
-        : [...(prev[key] as any[]), value]
-    }));
+  const toggleArrayFilter = (key: keyof typeof filters, value: number | string) => {
+    setFilters(prev => {
+      const currentArray = prev[key] as (number | string)[];
+      const isIncluded = currentArray.includes(value);
+      return {
+        ...prev,
+        [key]: isIncluded
+          ? currentArray.filter(item => item !== value)
+          : [...currentArray, value]
+      };
+    });
   };
 
   const clearFilters = () => {
@@ -131,7 +137,7 @@ const FilterApplication: React.FC<FilterApplicationProps> = ({ combinations, onF
             </label>
             <select
               value={filters.type}
-              onChange={(e) => updateFilter('type', e.target.value)}
+              onChange={(e) => updateFilter('type', e.target.value as 'all' | 'single' | 'double' | 'triple')}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="all">All Types</option>

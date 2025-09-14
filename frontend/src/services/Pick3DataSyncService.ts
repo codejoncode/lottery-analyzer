@@ -38,7 +38,6 @@ export class Pick3DataSyncService {
     const startTime = Date.now();
     const errors: string[] = [];
     const chunkSize = options.chunkSize || 365; // Default: 1 year chunks
-    let chunksProcessed = 0;
 
     try {
       console.log('Starting Pick 3 data synchronization...');
@@ -199,7 +198,7 @@ export class Pick3DataSyncService {
     );
 
     // Add chunks processed info
-    (result as any).chunksProcessed = chunksProcessed;
+    result.chunksProcessed = chunksProcessed;
 
     return result;
   }
@@ -258,7 +257,6 @@ export class Pick3DataSyncService {
     this.scraper = extendedScraper;
 
     try {
-      const currentYear = new Date().getFullYear();
       const startDate = '2000-01-01';
       const endDate = new Date().toISOString().split('T')[0];
 

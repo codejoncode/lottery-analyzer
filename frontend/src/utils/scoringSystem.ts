@@ -11,6 +11,27 @@ export interface Draw {
   power_play: string;
 }
 
+export interface PatternAnalysis {
+  numbers: number[];
+  patterns: {
+    evenOdd: string[];
+    highLow: string[];
+    lastDigits: number[];
+    sumDigits: number[];
+    primes: string[];
+  };
+  flipPatterns: {
+    evenOdd: number;
+    highLow: number;
+    primes: number;
+  };
+  trends: {
+    averageDifference: number;
+    trend: string;
+    volatility: number;
+  };
+}
+
 export interface ColumnData {
   column: number; // 1-5 for white balls, 6 for powerball
   number: number;
@@ -104,7 +125,7 @@ export class ColumnAnalyzer {
   private analysisCache: Map<number, ColumnAnalysis> = new Map();
   private numberStatsCache: Map<string, ColumnStats> = new Map();
   private patternStatsCache: Map<string, PatternColumnStats> = new Map();
-  private predictionCache: Map<string, any> = new Map();
+  private predictionCache: Map<string, unknown> = new Map();
   private cacheTimestamp: number = 0;
   private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
@@ -486,22 +507,12 @@ export class ColumnAnalyzer {
         return false;
       }
 
-      // Reconstruct draws from imported column data
-      const drawMap = new Map<string, { white_balls: number[], red_ball: number, power_play: string }>();
-
-      importData.columns.forEach((colData: any) => {
-        if (colData.column && colData.analysis && colData.analysis.numberStats) {
-          // This is a simplified import - reconstruct basic draw structure
-          // In a full implementation, you'd need more complete data
-        }
-      });
-
       // For now, keep the original draws but mark import as successful
       // A full implementation would reconstruct the draws array from columnData
       this.invalidateCache();
       return true;
-    } catch (error) {
-      console.error('Error importing column data:', error);
+    } catch {
+      console.error('Error importing column data');
       return false;
     }
   }
@@ -628,7 +639,7 @@ export class ColumnAnalyzer {
     };
   }
 
-  private calculatePatternStatsOptimized(column: number, columnData: ColumnData[]): Map<string, PatternColumnStats> {
+  private calculatePatternStatsOptimized(column: number, _columnData: ColumnData[]): Map<string, PatternColumnStats> {
     const patterns = [
       'even', 'odd', 'high', 'low', 'prime', 'non-prime',
       'sum-digit-1', 'sum-digit-2', 'sum-digit-3', 'sum-digit-4', 'sum-digit-5', 'sum-digit-6',
@@ -808,7 +819,7 @@ export class ColumnAnalyzer {
     };
   }
 
-  private calculatePatternStats(column: number, columnData: ColumnData[]): Map<string, PatternColumnStats> {
+  private calculatePatternStats(column: number, _columnData: ColumnData[]): Map<string, PatternColumnStats> {
     const patterns = [
       'even', 'odd', 'high', 'low', 'prime', 'non-prime',
       'sum-digit-1', 'sum-digit-2', 'sum-digit-3', 'sum-digit-4', 'sum-digit-5', 'sum-digit-6',
@@ -918,7 +929,7 @@ export class ColumnAnalyzer {
         return this.isPrime(number);
       case 'non-prime':
         return !this.isPrime(number) && number > 1;
-      case 'consecutive':
+      case 'consecutive': {
         // Check if number is part of a consecutive sequence in the draw
         const draw = this.draws.find(d =>
           d.white_balls.includes(number) || d.red_ball === number
@@ -926,9 +937,10 @@ export class ColumnAnalyzer {
         if (!draw) return false;
         const allNumbers = [...draw.white_balls, draw.red_ball];
         return allNumbers.some(n => Math.abs(n - number) === 1);
+      }
       case 'non-consecutive':
         return !this.matchesPattern(number, 'consecutive');
-      default:
+      default: {
         if (pattern.startsWith('sum-digit-')) {
           const digit = parseInt(pattern.split('-')[2]);
           return this.sumOfDigits(number) === digit;
@@ -938,6 +950,7 @@ export class ColumnAnalyzer {
           return number % 10 === digit;
         }
         return false;
+      }
     }
   }
 
@@ -1142,14 +1155,17 @@ export class ColumnAnalyzer {
   /**
    * Analyze patterns in recent column data
    */
-  private analyzeRecentPatterns(recentData: Array<{number: number; drawIndex: number; date: string}>, column: number): any {
+  private analyzeRecentPatterns(
+    recentData: Array<{ number: number; drawIndex: number; date: string }>,
+    column: number
+  ): PatternAnalysis {
     const numbers = recentData.map(d => d.number);
-    const patterns = {
-      evenOdd: numbers.map(n => n % 2 === 0 ? 'even' : 'odd'),
-      highLow: numbers.map(n => n > (column === 6 ? 13 : 34) ? 'high' : 'low'),
+    const patterns: PatternAnalysis['patterns'] = {
+      evenOdd: numbers.map(n => (n % 2 === 0 ? 'even' : 'odd')),
+      highLow: numbers.map(n => (n > (column === 6 ? 13 : 34) ? 'high' : 'low')),
       lastDigits: numbers.map(n => n % 10),
       sumDigits: numbers.map(n => this.sumOfDigits(n)),
-      primes: numbers.map(n => this.isPrime(n) ? 'prime' : 'non-prime')
+      primes: numbers.map(n => (this.isPrime(n) ? 'prime' : 'non-prime'))
     };
 
     // Detect flip patterns (even→odd→even, etc.)
@@ -1166,7 +1182,7 @@ export class ColumnAnalyzer {
   /**
    * Detect flip patterns in recent data
    */
-  private detectFlipPatterns(patterns: any): any {
+  private detectFlipPatterns(patterns: PatternAnalysis['patterns']): { evenOdd: number; highLow: number; primes: number } {
     const flips = {
       evenOdd: this.countFlips(patterns.evenOdd),
       highLow: this.countFlips(patterns.highLow),
@@ -1190,7 +1206,7 @@ export class ColumnAnalyzer {
   /**
    * Calculate trends in number sequence
    */
-  private calculateTrends(numbers: number[]): any {
+  private calculateTrends(numbers: number[]): { averageDifference: number; trend: string; volatility: number } {
     const diffs = [];
     for (let i = 1; i < numbers.length; i++) {
       diffs.push(numbers[i] - numbers[i - 1]);
@@ -1209,7 +1225,7 @@ export class ColumnAnalyzer {
   /**
    * Calculate probabilities for numbers in a column
    */
-  private calculateNumberProbabilities(column: number, analysis: ColumnAnalysis, patternAnalysis: any): Map<number, {probability: number; reasoning: string}> {
+  private calculateNumberProbabilities(column: number, analysis: ColumnAnalysis, patternAnalysis: PatternAnalysis): Map<number, {probability: number; reasoning: string}> {
     const probabilities = new Map<number, {probability: number; reasoning: string}>();
     const maxNumber = column === 6 ? 26 : 69;
     const minNumber = 1;
@@ -1263,7 +1279,7 @@ export class ColumnAnalyzer {
   /**
    * Calculate pattern continuation score
    */
-  private calculatePatternContinuationScore(number: number, patternAnalysis: any, column: number): number {
+  private calculatePatternContinuationScore(number: number, patternAnalysis: PatternAnalysis, column: number): number {
     let score = 0;
 
     // Even/Odd pattern continuation
@@ -1309,7 +1325,7 @@ export class ColumnAnalyzer {
   /**
    * Calculate trend alignment score
    */
-  private calculateTrendAlignmentScore(number: number, patternAnalysis: any): number {
+  private calculateTrendAlignmentScore(number: number, patternAnalysis: PatternAnalysis): number {
     const recentNumbers = patternAnalysis.numbers.slice(-3);
     const avgRecent = recentNumbers.reduce((a: number, b: number) => a + b, 0) / recentNumbers.length;
     const trend = patternAnalysis.trends.trend;
@@ -1917,7 +1933,7 @@ export class PowerballScoringSystem {
     };
   }
 
-  updatePredictionsWithPerformance(newDraw?: Draw): { performanceMetrics: { calculationTime: number; memoryUsage: number; predictionAccuracy: number } } {
+  updatePredictionsWithPerformance(_newDraw?: Draw): { performanceMetrics: { calculationTime: number; memoryUsage: number; predictionAccuracy: number } } {
     const startTime = Date.now();
     // Simulate some processing
     const endTime = Date.now();
@@ -1931,7 +1947,7 @@ export class PowerballScoringSystem {
     };
   }
 
-  exportSystemData(): any {
+  exportSystemData(): { numberStats: NumberScoreData[]; totalDraws: number; lastUpdated: string; columnAnalysis: string } {
     return {
       numberStats: Array.from(this.numberStats.values()),
       totalDraws: this.draws.length,
@@ -1988,9 +2004,6 @@ export class DataManager {
 
   private loadFromCSV(): Draw[] {
     try {
-      // For now, we'll use a hardcoded path - in production this could be configurable
-      const csvPath = '/draws.txt'; // Relative to public folder
-
       // Since we can't directly read files in browser, we'll need to fetch from public folder
       // This will be handled by the component that loads the data
       console.log('📄 CSV loading will be handled by component');
@@ -2049,7 +2062,7 @@ export class DataManager {
             });
           }
         } catch (error) {
-          console.warn(`⚠️ Skipping invalid line: ${line}`);
+          console.warn(`⚠️ Skipping invalid line: ${line}`, error);
         }
       }
     }

@@ -1,17 +1,19 @@
-import type { Combination } from '../prediction-engine/types';
+import type {
+  Combination,
+  CacheEntry,
+  CacheStatistics,
+  CombinationScoresCache,
+  FilterResultsCache,
+  StatisticsCache,
+  DebugData
+} from '../prediction-engine/types';
 
 /**
  * Result Cache
  * Caches computed results for expensive operations
  */
 export class ResultCache {
-  private cache: Map<string, {
-    result: any;
-    timestamp: number;
-    accessCount: number;
-    lastAccessed: number;
-    size: number; // Estimated size in bytes
-  }> = new Map();
+  private cache: Map<string, CacheEntry<unknown>> = new Map();
 
   private readonly maxSize: number;
   private readonly maxMemory: number; // Max memory usage in bytes
@@ -27,7 +29,7 @@ export class ResultCache {
   /**
    * Generate cache key for different types of results
    */
-  private generateKey(type: string, params: any): string {
+  private generateKey(type: string, params: unknown): string {
     const paramStr = typeof params === 'object' ? JSON.stringify(params) : String(params);
     return `${type}:${paramStr}`;
   }
@@ -35,7 +37,7 @@ export class ResultCache {
   /**
    * Estimate size of cached item in bytes
    */
-  private estimateSize(item: any): number {
+  private estimateSize(item: unknown): number {
     const str = JSON.stringify(item);
     return str.length * 2; // Rough estimate: 2 bytes per character
   }
@@ -43,7 +45,7 @@ export class ResultCache {
   /**
    * Store result in cache
    */
-  set(type: string, params: any, result: any): void {
+  set<T>(type: string, params: unknown, result: T): void {
     const key = this.generateKey(type, params);
     const now = Date.now();
     const size = this.estimateSize(result);
@@ -78,7 +80,7 @@ export class ResultCache {
   /**
    * Retrieve result from cache
    */
-  get(type: string, params: any): any | null {
+  get<T>(type: string, params: unknown): T | null {
     const key = this.generateKey(type, params);
     const entry = this.cache.get(key);
 
@@ -97,13 +99,13 @@ export class ResultCache {
     entry.accessCount++;
     entry.lastAccessed = Date.now();
 
-    return entry.result;
+    return entry.result as T;
   }
 
   /**
    * Check if result exists in cache
    */
-  has(type: string, params: any): boolean {
+  has(type: string, params: unknown): boolean {
     const key = this.generateKey(type, params);
     const entry = this.cache.get(key);
 
@@ -184,7 +186,7 @@ export class ResultCache {
 
   getCombinationScores(combinations: number[][]): Combination[] | null {
     const key = `combo-scores:${JSON.stringify(combinations).slice(0, 100)}`;
-    const cached = this.get('combination-scores', key);
+    const cached = this.get<CombinationScoresCache>('combination-scores', key);
     return cached ? cached.scores : null;
   }
 
@@ -196,26 +198,26 @@ export class ResultCache {
 
   getFilterResults(combinations: number[][], filters: string[]): number[][] | null {
     const key = `filter-results:${filters.join(',')}:${combinations.length}`;
-    const cached = this.get('filter-results', key);
+    const cached = this.get<FilterResultsCache>('filter-results', key);
     return cached ? cached.filtered : null;
   }
 
   // Cache analysis results
-  setAnalysisResult(analysisType: string, params: any, result: any): void {
+  setAnalysisResult(analysisType: string, params: unknown, result: unknown): void {
     this.set(`analysis-${analysisType}`, params, result);
   }
 
-  getAnalysisResult(analysisType: string, params: any): any | null {
+  getAnalysisResult(analysisType: string, params: unknown): unknown | null {
     return this.get(`analysis-${analysisType}`, params);
   }
 
   // Cache statistical computations
-  setStatistics(key: string, data: number[], stats: any): void {
+  setStatistics(key: string, data: number[], stats: unknown): void {
     this.set('statistics', { key, dataLength: data.length }, { data, stats });
   }
 
-  getStatistics(key: string, data: number[]): any | null {
-    const cached = this.get('statistics', { key, dataLength: data.length });
+  getStatistics(key: string, data: number[]): unknown | null {
+    const cached = this.get<StatisticsCache>('statistics', { key, dataLength: data.length });
     return cached ? cached.stats : null;
   }
 
@@ -247,18 +249,7 @@ export class ResultCache {
   /**
    * Get cache statistics
    */
-  getStats(): {
-    size: number;
-    maxSize: number;
-    memoryUsage: number;
-    maxMemory: number;
-    memoryUsagePercent: number;
-    hitRate: number;
-    totalAccesses: number;
-    totalHits: number;
-    averageAge: number;
-    typeDistribution: { [type: string]: number };
-  } {
+  getStats(): CacheStatistics {
     const now = Date.now();
     let totalAccesses = 0;
     let totalHits = 0;
@@ -341,8 +332,8 @@ export class ResultCache {
   /**
    * Export cache data for debugging
    */
-  exportDebugData(): any {
-    const debugData: any = {
+  exportDebugData(): DebugData {
+    const debugData: DebugData = {
       stats: this.getStats(),
       entries: []
     };

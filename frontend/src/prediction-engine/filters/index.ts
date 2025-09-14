@@ -5,9 +5,10 @@ import type {
   ParityFilterConfig,
   SkipFilterConfig,
   DigitFilterConfig,
-  HighLowFilterConfig,
-  FilterConfig
+  HighLowFilterConfig
 } from '../types';
+
+export type FilterConfigUnion = SumFilterConfig | ParityFilterConfig | SkipFilterConfig | DigitFilterConfig | HighLowFilterConfig;
 
 /**
  * Sum Filter - Filters combinations based on sum range
@@ -25,7 +26,7 @@ export class SumFilter implements PredictionFilter<SumFilterConfig> {
     targetSum: 175
   };
 
-  apply(combinations: number[][], draws: Draw[]): number[][] {
+  apply(combinations: number[][], _draws: Draw[]): number[][] {
     if (!this.config.enabled) return combinations;
 
     return combinations.filter(combo => {
@@ -65,7 +66,7 @@ export class ParityFilter implements PredictionFilter<ParityFilterConfig> {
     targetRatio: 0.4 // 40% odd numbers
   };
 
-  apply(combinations: number[][], draws: Draw[]): number[][] {
+  apply(combinations: number[][], _draws: Draw[]): number[][] {
     if (!this.config.enabled) return combinations;
 
     return combinations.filter(combo => {
@@ -175,7 +176,7 @@ export class DigitFilter implements PredictionFilter<DigitFilterConfig> {
     excludeDigits: []
   };
 
-  apply(combinations: number[][], draws: Draw[]): number[][] {
+  apply(combinations: number[][], _draws: Draw[]): number[][] {
     if (!this.config.enabled) return combinations;
 
     return combinations.filter(combo => {
@@ -226,7 +227,7 @@ export class HighLowFilter implements PredictionFilter<HighLowFilterConfig> {
     highThreshold: 35
   };
 
-  apply(combinations: number[][], draws: Draw[]): number[][] {
+  apply(combinations: number[][], _draws: Draw[]): number[][] {
     if (!this.config.enabled) return combinations;
 
     return combinations.filter(combo => {
@@ -235,15 +236,15 @@ export class HighLowFilter implements PredictionFilter<HighLowFilterConfig> {
     });
   }
 
-  getConfig() {
+  getConfig(): HighLowFilterConfig {
     return { ...this.config };
   }
 
-  setConfig(config: typeof this.config): void {
+  setConfig(config: HighLowFilterConfig): void {
     this.config = { ...config };
   }
 
-  validateConfig(config: typeof this.config): boolean {
+  validateConfig(config: HighLowFilterConfig): boolean {
     return config.minHigh >= 0 && config.maxHigh <= 5 && config.minHigh <= config.maxHigh;
   }
 }
@@ -252,7 +253,7 @@ export class HighLowFilter implements PredictionFilter<HighLowFilterConfig> {
  * Filter Manager - Manages all prediction filters
  */
 export class FilterManager {
-  private filters: Map<string, PredictionFilter<any>> = new Map();
+  private filters: Map<string, PredictionFilter<FilterConfigUnion>> = new Map();
 
   constructor() {
     this.initializeFilters();
@@ -266,19 +267,19 @@ export class FilterManager {
     this.registerFilter(new HighLowFilter());
   }
 
-  registerFilter<T extends FilterConfig>(filter: PredictionFilter<T>): void {
-    this.filters.set(filter.id, filter);
+  registerFilter<T extends FilterConfigUnion>(filter: PredictionFilter<T>): void {
+    this.filters.set(filter.id, filter as unknown as PredictionFilter<FilterConfigUnion>);
   }
 
-  getFilter(id: string): PredictionFilter<any> | undefined {
+  getFilter(id: string): PredictionFilter<FilterConfigUnion> | undefined {
     return this.filters.get(id);
   }
 
-  getAllFilters(): PredictionFilter<any>[] {
+  getAllFilters(): PredictionFilter<FilterConfigUnion>[] {
     return Array.from(this.filters.values());
   }
 
-  getFiltersByCategory(category: string): PredictionFilter<any>[] {
+  getFiltersByCategory(category: string): PredictionFilter<FilterConfigUnion>[] {
     return this.getAllFilters().filter(filter => filter.category === category);
   }
 
@@ -295,15 +296,15 @@ export class FilterManager {
     return filtered;
   }
 
-  getFilterConfigs(): Record<string, any> {
-    const configs: Record<string, any> = {};
+  getFilterConfigs(): Record<string, FilterConfigUnion> {
+    const configs: Record<string, FilterConfigUnion> = {};
     for (const [id, filter] of this.filters) {
       configs[id] = filter.getConfig();
     }
     return configs;
   }
 
-  setFilterConfig(id: string, config: any): boolean {
+  setFilterConfig(id: string, config: FilterConfigUnion): boolean {
     const filter = this.filters.get(id);
     if (filter && filter.validateConfig(config)) {
       filter.setConfig(config);

@@ -131,11 +131,12 @@ export class DrawLocationAnalyzer {
         prediction = Math.round(lastJump * 0.8);
         break;
       case 'stable':
-      default:
+      default: {
         // Revert towards average
         const deviation = lastJump - averageJump;
         prediction = Math.round(lastJump - deviation * 0.3);
         break;
+      }
     }
 
     // Ensure reasonable bounds

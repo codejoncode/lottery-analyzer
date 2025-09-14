@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Pick3Analyzer } from '../../utils/pick3Analyzer';
 import './Pick3Backtesting.css';
 
 interface BacktestResult {
@@ -36,7 +35,7 @@ interface Pick3BacktestingProps {
 }
 
 const Pick3Backtesting: React.FC<Pick3BacktestingProps> = ({
-  historicalDraws = [],
+  historicalDraws: _historicalDraws = [],
   scoringWeights = {
     columnPrediction: 0.20,
     skipAnalysis: 0.18,
@@ -47,7 +46,6 @@ const Pick3Backtesting: React.FC<Pick3BacktestingProps> = ({
     deflateEfficiency: 0.15
   }
 }) => {
-  const [analyzer] = useState(() => new Pick3Analyzer());
   const [backtestResults, setBacktestResults] = useState<BacktestResult[]>([]);
   const [summary, setSummary] = useState<BacktestSummary | null>(null);
   const [loading, setLoading] = useState(false);
@@ -80,14 +78,14 @@ const Pick3Backtesting: React.FC<Pick3BacktestingProps> = ({
     });
 
     // Skip analysis score
-    digits.forEach(digit => {
+    digits.forEach(_digit => {
       const skipFactor = Math.random() * 0.5 + 0.5;
       score += skipFactor * scoringWeights.skipAnalysis;
     });
 
     // Pair coverage score
     const pairs = [combo.slice(0, 2), combo.slice(1, 3), combo[0] + combo[2]];
-    pairs.forEach(pair => {
+    pairs.forEach(_pair => {
       const pairFrequency = Math.random() * 0.7 + 0.3;
       score += pairFrequency * scoringWeights.pairCoverage;
     });
@@ -122,7 +120,7 @@ const Pick3Backtesting: React.FC<Pick3BacktestingProps> = ({
     const results: BacktestResult[] = [];
     const drawsToTest = mockHistoricalDraws.slice(-testCount);
 
-    drawsToTest.forEach((draw, index) => {
+    drawsToTest.forEach((draw, _index) => {
       const actualCombo = draw.numbers.join('');
       const predictedScore = calculatePredictedScore(actualCombo);
 
@@ -198,17 +196,7 @@ const Pick3Backtesting: React.FC<Pick3BacktestingProps> = ({
     runBacktest();
   }, [testCount, timeRange]);
 
-  const getAccuracyColor = (accuracy: number) => {
-    if (accuracy >= 0.8) return 'text-green-600';
-    if (accuracy >= 0.6) return 'text-yellow-600';
-    return 'text-red-600';
-  };
 
-  const getRankColor = (rank: number) => {
-    if (rank <= 10) return 'text-green-600';
-    if (rank <= 50) return 'text-yellow-600';
-    return 'text-red-600';
-  };
 
   return (
     <div className="max-w-7xl mx-auto p-6 bg-white rounded-lg shadow-lg">
@@ -243,7 +231,7 @@ const Pick3Backtesting: React.FC<Pick3BacktestingProps> = ({
             <label className="control-label">Time Range</label>
             <select
               value={timeRange}
-              onChange={(e) => setTimeRange(e.target.value as any)}
+              onChange={(e) => setTimeRange(e.target.value as 'week' | 'month' | 'quarter' | 'year')}
               className="control-select"
             >
               <option value="week">Last Week</option>
