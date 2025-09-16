@@ -4,13 +4,14 @@ import SumsAnalysis from './SumsAnalysis';
 import RootSumsAnalysis from './RootSumsAnalysis';
 import VTracAnalysis from './VTracAnalysis';
 import CombinationExplorer from './CombinationExplorer';
+import SuperPredictorDashboard from './Pick3/SuperPredictorDashboard';
 
 interface Pick3DashboardProps {
   className?: string;
 }
 
 const Pick3Dashboard: React.FC<Pick3DashboardProps> = ({ className = '' }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'sums' | 'rootsums' | 'vtrac' | 'explorer'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'sums' | 'rootsums' | 'vtrac' | 'explorer' | 'superpredictor'>('overview');
 
   return (
     <div className={`pick3-dashboard ${className}`}>
@@ -50,6 +51,12 @@ const Pick3Dashboard: React.FC<Pick3DashboardProps> = ({ className = '' }) => {
         >
           Combination Explorer
         </button>
+        <button
+          className={activeTab === 'superpredictor' ? 'active' : ''}
+          onClick={() => setActiveTab('superpredictor')}
+        >
+          🎯 Super Predictor
+        </button>
       </div>
 
       <div className="dashboard-content">
@@ -58,6 +65,7 @@ const Pick3Dashboard: React.FC<Pick3DashboardProps> = ({ className = '' }) => {
         {activeTab === 'rootsums' && <RootSumsAnalysis />}
         {activeTab === 'vtrac' && <VTracAnalysis />}
         {activeTab === 'explorer' && <CombinationExplorer />}
+        {activeTab === 'superpredictor' && <SuperPredictorDashboard />}
       </div>
     </div>
   );
