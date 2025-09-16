@@ -1,10 +1,4 @@
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
+// Browser-compatible Pick3DataManager using localStorage instead of fs
 export interface Pick3Draw {
   date: string;
   midday?: string;
@@ -19,38 +13,29 @@ export interface Pick3Data {
 }
 
 export class Pick3DataManager {
-  private dataPath: string;
   private data: Pick3Data;
+  private readonly STORAGE_KEY = 'pick3-data';
 
   constructor() {
-    this.dataPath = path.join(__dirname, '../../data/pick3-data.json');
     this.data = {
       draws: [],
       lastUpdated: 0,
       source: 'scraped'
     };
-    this.ensureDataDirectory();
     this.loadData();
-  }
-
-  private ensureDataDirectory(): void {
-    const dataDir = path.dirname(this.dataPath);
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
-    }
   }
 
   private loadData(): void {
     try {
-      if (fs.existsSync(this.dataPath)) {
-        const rawData = fs.readFileSync(this.dataPath, 'utf-8');
-        this.data = JSON.parse(rawData);
-        console.log(`Loaded ${this.data.draws.length} Pick 3 draws from local storage`);
+      const stored = localStorage.getItem(this.STORAGE_KEY);
+      if (stored) {
+        this.data = JSON.parse(stored);
+        console.log(`Loaded ${this.data.draws.length} Pick 3 draws from localStorage`);
       } else {
         console.log('No local Pick 3 data found, starting with empty dataset');
       }
     } catch (error) {
-      console.error('Error loading Pick 3 data:', error);
+      console.error('Error loading Pick 3 data from localStorage:', error);
       this.data = {
         draws: [],
         lastUpdated: 0,
@@ -61,10 +46,10 @@ export class Pick3DataManager {
 
   private saveData(): void {
     try {
-      fs.writeFileSync(this.dataPath, JSON.stringify(this.data, null, 2));
-      console.log(`Saved ${this.data.draws.length} Pick 3 draws to local storage`);
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.data));
+      console.log(`Saved ${this.data.draws.length} Pick 3 draws to localStorage`);
     } catch (error) {
-      console.error('Error saving Pick 3 data:', error);
+      console.error('Error saving Pick 3 data to localStorage:', error);
     }
   }
 
