@@ -1,12 +1,12 @@
-import { ColumnAnalysisPage } from "../../src/components/ColumnAnalysisPage";
+import { Pick3ColumnAnalysisPage } from "../../src/components/Pick3ColumnAnalysisPage";
 
 export function meta() {
   return [
-    { title: "Column Analysis - Powerball Analyzer" },
-    { name: "description", content: "Detailed positional analysis of Powerball numbers and patterns" },
+    { title: "Pick 3 Column Analysis - Lottery Analyzer" },
+    { name: "description", content: "Detailed positional analysis of Pick 3 numbers across hundreds, tens, and units positions" },
   ];
 }
 
 export default function ColumnAnalysis() {
-  return <ColumnAnalysisPage />;
+  return <Pick3ColumnAnalysisPage />;
 }

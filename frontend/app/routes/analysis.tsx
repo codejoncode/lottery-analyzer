@@ -1,13 +1,13 @@
 import type { Route } from "./+types/analysis";
-import NumberAnalysis from "../../src/components/NumberAnalysis";
+import { Pick3NumberAnalysis } from "../../src/components/Pick3NumberAnalysis";
 
 export function meta(_: Route.MetaArgs) {
   return [
-    { title: "Number Analysis" },
-    { name: "description", content: "Powerball number analysis and categorization" },
+    { title: "Pick 3 Number Analysis" },
+    { name: "description", content: "Comprehensive analysis of Pick 3 numbers (000-999) with patterns and statistics" },
   ];
 }
 
 export default function Analysis() {
-  return <NumberAnalysis />;
+  return <Pick3NumberAnalysis />;
 }

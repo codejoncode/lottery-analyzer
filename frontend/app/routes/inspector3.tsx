@@ -15,6 +15,8 @@ export default function Inspector3Page() {
           <h1 className="text-2xl font-bold">🔍 Inspector 3</h1>
           <div className="space-x-4 text-sm">
             <a href="/" className="hover:text-blue-200">Pick 3 Home</a>
+            <a href="/data-entry" className="hover:text-blue-200">Data Entry</a>
+            <a href="/deflate" className="hover:text-blue-200">Deflate</a>
             <a href="/analysis" className="hover:text-blue-200">Analysis</a>
             <a href="/scoring" className="hover:text-blue-200">Scoring</a>
             <a href="/pairs" className="hover:text-blue-200">Pairs</a>

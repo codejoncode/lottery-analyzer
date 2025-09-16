@@ -22,10 +22,21 @@ export class Pick3DataManager {
       lastUpdated: 0,
       source: 'scraped'
     };
-    this.loadData();
+    // Only load data if we're in a browser environment
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      this.loadData();
+    } else {
+      console.log('SSR environment detected, skipping localStorage initialization');
+    }
   }
 
   private loadData(): void {
+    // Double-check we're in browser environment
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+      console.log('localStorage not available, using empty dataset');
+      return;
+    }
+
     try {
       const stored = localStorage.getItem(this.STORAGE_KEY);
       if (stored) {
@@ -45,6 +56,12 @@ export class Pick3DataManager {
   }
 
   private saveData(): void {
+    // Check if we're in browser environment
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+      console.log('localStorage not available, skipping save');
+      return;
+    }
+
     try {
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.data));
       console.log(`Saved ${this.data.draws.length} Pick 3 draws to localStorage`);

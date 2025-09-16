@@ -9,6 +9,11 @@ interface BacktestResult {
   rank: number;
   wasInTop10: boolean;
   drawDate: string;
+  predictedNumbers: string[];
+  actualNumbers: string[];
+  straightHit: boolean;
+  boxHit: boolean;
+  hitType: 'none' | 'box' | 'straight';
 }
 
 interface BacktestSummary {
@@ -19,6 +24,12 @@ interface BacktestSummary {
   worstAccuracy: number;
   standardDeviation: number;
   confidenceInterval: { min: number; max: number };
+  straightAccuracy: number;
+  boxAccuracy: number;
+  overallHitRate: number;
+  straightHits: number;
+  boxHits: number;
+  totalHits: number;
 }
 
 interface Pick3BacktestingProps {
@@ -124,7 +135,7 @@ const Pick3Backtesting: React.FC<Pick3BacktestingProps> = ({
       const actualCombo = draw.numbers.join('');
       const predictedScore = calculatePredictedScore(actualCombo);
 
-      // Generate predictions for this draw
+      // Generate predictions for this draw (top 20 predictions)
       const allCombos: Array<{ combo: string; score: number }> = [];
       for (let i = 0; i < 10; i++) {
         for (let j = 0; j < 10; j++) {
@@ -136,10 +147,32 @@ const Pick3Backtesting: React.FC<Pick3BacktestingProps> = ({
         }
       }
 
-      // Sort by predicted score and find rank
+      // Sort by predicted score and get top 20 predictions
       allCombos.sort((a, b) => b.score - a.score);
+      const topPredictions = allCombos.slice(0, 20).map(c => c.combo);
+
+      // Find rank of actual combination
       const actualRank = allCombos.findIndex(c => c.combo === actualCombo) + 1;
       const wasInTop10 = actualRank <= 10;
+
+      // Check for straight hit (exact match)
+      const straightHit = topPredictions.includes(actualCombo);
+
+      // Check for box hit (any permutation)
+      let boxHit = false;
+      const actualDigits = actualCombo.split('').sort().join('');
+      for (const prediction of topPredictions) {
+        const predDigits = prediction.split('').sort().join('');
+        if (predDigits === actualDigits) {
+          boxHit = true;
+          break;
+        }
+      }
+
+      // Determine hit type
+      let hitType: 'none' | 'box' | 'straight' = 'none';
+      if (straightHit) hitType = 'straight';
+      else if (boxHit) hitType = 'box';
 
       // Calculate accuracy based on how close the prediction was
       const predictedRank = allCombos[0].score; // Best predicted score
@@ -152,7 +185,12 @@ const Pick3Backtesting: React.FC<Pick3BacktestingProps> = ({
         accuracy,
         rank: actualRank,
         wasInTop10,
-        drawDate: draw.date
+        drawDate: draw.date,
+        predictedNumbers: topPredictions,
+        actualNumbers: [actualCombo],
+        straightHit,
+        boxHit,
+        hitType
       });
     });
 
@@ -179,6 +217,15 @@ const Pick3Backtesting: React.FC<Pick3BacktestingProps> = ({
       max: Math.min(1, averageAccuracy + confidenceMargin)
     };
 
+    // Calculate box/straight accuracy metrics
+    const straightHits = results.filter(r => r.straightHit).length;
+    const boxHits = results.filter(r => r.boxHit).length;
+    const totalHits = results.filter(r => r.straightHit || r.boxHit).length;
+
+    const straightAccuracy = straightHits / results.length;
+    const boxAccuracy = boxHits / results.length;
+    const overallHitRate = totalHits / results.length;
+
     setSummary({
       totalTests: results.length,
       averageAccuracy,
@@ -186,7 +233,13 @@ const Pick3Backtesting: React.FC<Pick3BacktestingProps> = ({
       bestAccuracy,
       worstAccuracy,
       standardDeviation,
-      confidenceInterval
+      confidenceInterval,
+      straightAccuracy,
+      boxAccuracy,
+      overallHitRate,
+      straightHits,
+      boxHits,
+      totalHits
     });
 
     setLoading(false);
@@ -295,6 +348,36 @@ const Pick3Backtesting: React.FC<Pick3BacktestingProps> = ({
                 Prediction consistency
               </div>
             </div>
+
+            <div className="summary-card">
+              <div className="metric-value text-red-600">
+                {(summary.straightAccuracy * 100).toFixed(1)}%
+              </div>
+              <div className="metric-label">Straight Hit Rate</div>
+              <div className="metric-subtitle">
+                {summary.straightHits}/{summary.totalTests} exact matches
+              </div>
+            </div>
+
+            <div className="summary-card">
+              <div className="metric-value text-yellow-600">
+                {(summary.boxAccuracy * 100).toFixed(1)}%
+              </div>
+              <div className="metric-label">Box Hit Rate</div>
+              <div className="metric-subtitle">
+                {summary.boxHits}/{summary.totalTests} any order matches
+              </div>
+            </div>
+
+            <div className="summary-card">
+              <div className="metric-value text-green-600">
+                {(summary.overallHitRate * 100).toFixed(1)}%
+              </div>
+              <div className="metric-label">Overall Hit Rate</div>
+              <div className="metric-subtitle">
+                {summary.totalHits}/{summary.totalTests} total hits
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -317,6 +400,9 @@ const Pick3Backtesting: React.FC<Pick3BacktestingProps> = ({
                   <th className="table-header-cell">Predicted Rank</th>
                   <th className="table-header-cell">Accuracy</th>
                   <th className="table-header-cell">Top 10 Hit</th>
+                  <th className="table-header-cell">Hit Type</th>
+                  <th className="table-header-cell">Straight Hit</th>
+                  <th className="table-header-cell">Box Hit</th>
                 </tr>
               </thead>
               <tbody className="table-body">
@@ -344,6 +430,33 @@ const Pick3Backtesting: React.FC<Pick3BacktestingProps> = ({
                     </td>
                     <td className="table-cell">
                       {result.wasInTop10 ? (
+                        <span className="hit-badge hit-yes">
+                          ✅ Yes
+                        </span>
+                      ) : (
+                        <span className="hit-badge hit-no">
+                          ❌ No
+                        </span>
+                      )}
+                    </td>
+                    <td className="table-cell">
+                      <span className={`hit-type-badge hit-type-${result.hitType}`}>
+                        {result.hitType === 'straight' ? '🎯 Straight' : result.hitType === 'box' ? '📦 Box' : '❌ None'}
+                      </span>
+                    </td>
+                    <td className="table-cell">
+                      {result.straightHit ? (
+                        <span className="hit-badge hit-yes">
+                          ✅ Yes
+                        </span>
+                      ) : (
+                        <span className="hit-badge hit-no">
+                          ❌ No
+                        </span>
+                      )}
+                    </td>
+                    <td className="table-cell">
+                      {result.boxHit ? (
                         <span className="hit-badge hit-yes">
                           ✅ Yes
                         </span>

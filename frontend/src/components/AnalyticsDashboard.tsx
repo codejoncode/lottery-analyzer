@@ -10,6 +10,7 @@ import AnalyticsService from '../services/api';
 import websocketService from '../services/websocketService';
 import EnhancedPredictionDisplay from './EnhancedPredictionDisplay';
 import PredictionTracker from './PredictionTracker';
+import DataEntry from './Pick3/DataEntry';
 import type {
   PatternData,
   CorrelationData,
@@ -299,6 +300,9 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = React.memo(
             <div style={{ backgroundColor: '#1f2937', borderRadius: '12px', padding: '20px' }}>
               <h3 style={{ color: '#ffffff', marginBottom: '15px' }}>Pick 4 Enhanced Predictions</h3>
               <EnhancedPredictionDisplay gameType="pick4" />
+            </div>
+            <div style={{ backgroundColor: '#1f2937', borderRadius: '12px', padding: '20px' }}>
+              <DataEntry />
             </div>
           </div>
         );

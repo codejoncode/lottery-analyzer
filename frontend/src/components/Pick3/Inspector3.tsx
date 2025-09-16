@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { pick3DataManager } from '../../services/Pick3DataManager';
 import './Inspector3.css';
 
 interface Inspector3Props {
@@ -17,18 +18,72 @@ interface NumberAnalysis {
     split: string;
     back: string;
   };
+  drawDate?: string;
+  source?: string;
+}
+
+interface DrawData {
+  date: string;
+  numbers?: number[];
+  midday?: string;
+  evening?: string;
 }
 
 const Inspector3: React.FC<Inspector3Props> = ({ className = '' }) => {
+  const [historicalData, setHistoricalData] = useState<DrawData[]>([]);
+  const [drawCount, setDrawCount] = useState<number>(60);
+  const [activeTab, setActiveTab] = useState<'overview' | 'parity' | 'highlow' | 'pairs' | 'box' | 'draws'>('overview');
+  const [loading, setLoading] = useState(false);
+  const [customDrawCount, setCustomDrawCount] = useState<string>('60');
   const [inputNumbers, setInputNumbers] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<'overview' | 'parity' | 'highlow' | 'pairs' | 'box'>('overview');
+
+  // Load historical data on component mount
+  useEffect(() => {
+    loadHistoricalData();
+  }, []);
+
+  const loadHistoricalData = async () => {
+    setLoading(true);
+    try {
+      const allDraws = pick3DataManager.getDraws();
+      setHistoricalData(allDraws);
+      console.log(`Loaded ${allDraws.length} historical draws for Inspector3`);
+    } catch (error) {
+      console.error('Error loading historical data:', error);
+      setHistoricalData([]);
+    }
+    setLoading(false);
+  };
+
+  const handleDrawCountChange = (count: number) => {
+    setDrawCount(count);
+    setCustomDrawCount(count.toString());
+  };
+
+  const handleCustomDrawCountSubmit = () => {
+    const count = parseInt(customDrawCount);
+    if (!isNaN(count) && count > 0 && count <= historicalData.length) {
+      setDrawCount(count);
+    }
+  };
+
+  // Get the selected number of recent draws
+  const selectedDraws = useMemo(() => {
+    return historicalData.slice(-drawCount);
+  }, [historicalData, drawCount]);
 
   const analyzedNumbers = useMemo(() => {
-    if (!inputNumbers.trim()) return [];
+    return selectedDraws.map(draw => {
+      // Extract digits from draw data
+      let digits: number[] = [];
+      if (Array.isArray(draw.numbers)) {
+        digits = draw.numbers.slice(0, 3);
+      } else if (typeof draw.midday === 'string') {
+        digits = draw.midday.split('').map(d => parseInt(d)).slice(0, 3);
+      } else if (typeof draw.evening === 'string') {
+        digits = draw.evening.split('').map(d => parseInt(d)).slice(0, 3);
+      }
 
-    const lines = inputNumbers.split('\n').filter(line => line.trim());
-    return lines.map(line => {
-      const digits = line.replace(/\D/g, '').slice(0, 3).split('').map(d => parseInt(d));
       if (digits.length !== 3 || digits.some(isNaN)) return null;
 
       const sum = digits.reduce((a, b) => a + b, 0);
@@ -44,6 +99,8 @@ const Inspector3: React.FC<Inspector3Props> = ({ className = '' }) => {
         parityPattern,
         highLowPattern,
         boxKey,
+        drawDate: draw.date,
+        source: Array.isArray(draw.numbers) ? 'numbers' : typeof draw.midday === 'string' ? 'midday' : 'evening',
         pairs: {
           front: digits.slice(0, 2).join(''),
           split: [digits[0], digits[2]].join(''),
@@ -51,7 +108,7 @@ const Inspector3: React.FC<Inspector3Props> = ({ className = '' }) => {
         }
       } as NumberAnalysis;
     }).filter(Boolean) as NumberAnalysis[];
-  }, [inputNumbers]);
+  }, [selectedDraws]);
 
   const statistics = useMemo(() => {
     if (analyzedNumbers.length === 0) return null;
@@ -328,6 +385,39 @@ const Inspector3: React.FC<Inspector3Props> = ({ className = '' }) => {
         />
         <div className="input-info">
           <span>Numbers analyzed: {analyzedNumbers.length}</span>
+        </div>
+      </div>
+
+      <div className="draw-controls">
+        <h3>Historical Data Analysis</h3>
+        <div className="draw-count-selector">
+          <label>Analyze last </label>
+          <select
+            value={drawCount}
+            onChange={(e) => handleDrawCountChange(parseInt(e.target.value))}
+          >
+            <option value={30}>30 draws</option>
+            <option value={60}>60 draws</option>
+            <option value={90}>90 draws</option>
+            <option value={120}>120 draws</option>
+            <option value={historicalData.length}>All draws ({historicalData.length})</option>
+          </select>
+          <div className="custom-draw-input">
+            <input
+              type="number"
+              value={customDrawCount}
+              onChange={(e) => setCustomDrawCount(e.target.value)}
+              placeholder="Custom count"
+              min="1"
+              max={historicalData.length}
+            />
+            <button onClick={handleCustomDrawCountSubmit}>Set</button>
+          </div>
+        </div>
+        {loading && <div className="loading-indicator">Loading historical data...</div>}
+        <div className="data-info">
+          <span>Available draws: {historicalData.length}</span>
+          <span>Analyzing: {selectedDraws.length} draws</span>
         </div>
       </div>
 

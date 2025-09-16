@@ -227,140 +227,185 @@ export interface PredictionStats {
 
 // Analytics API Service
 export class AnalyticsService {
+  private static cache = new Map<string, { data: unknown; timestamp: number }>();
+  private static readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+  // Generic cached request method
+  private static async getCachedData<T>(
+    cacheKey: string,
+    fetchFunction: () => Promise<T>
+  ): Promise<T> {
+    const cached = this.cache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION) {
+      console.log(`📋 Using cached data for ${cacheKey}`);
+      return cached.data as T;
+    }
+
+    console.log(`🔄 Fetching fresh data for ${cacheKey}`);
+    const data = await fetchFunction();
+    this.cache.set(cacheKey, { data, timestamp: Date.now() });
+    return data;
+  }
+
+  // Clear cache method
+  static clearCache(): void {
+    this.cache.clear();
+    console.log('🗑️ Analytics cache cleared');
+  }
+
+  // Get cache stats
+  static getCacheStats(): { size: number; keys: string[] } {
+    return {
+      size: this.cache.size,
+      keys: Array.from(this.cache.keys())
+    };
+  }
   // Get performance analytics data
   static async getPerformanceData(): Promise<PatternData[]> {
-    try {
-      const response = await apiClient.get('/analytics/performance');
-      return response.data.data;
-    } catch (error) {
-      console.error('Error fetching performance data:', error);
-      // Return mock data as fallback
-      return [
-        { pattern: 'Pattern A', frequency: 45, successRate: 0.78, totalOccurrences: 120 },
-        { pattern: 'Pattern B', frequency: 32, successRate: 0.65, totalOccurrences: 95 },
-        { pattern: 'Pattern C', frequency: 28, successRate: 0.82, totalOccurrences: 85 },
-        { pattern: 'Pattern D', frequency: 19, successRate: 0.71, totalOccurrences: 65 },
-        { pattern: 'Pattern E', frequency: 15, successRate: 0.69, totalOccurrences: 55 }
-      ];
-    }
+    return this.getCachedData('performance', async () => {
+      try {
+        const response = await apiClient.get('/analytics/performance');
+        return response.data.data;
+      } catch (error) {
+        console.error('Error fetching performance data:', error);
+        // Return mock data as fallback
+        return [
+          { pattern: 'Pattern A', frequency: 45, successRate: 0.78, totalOccurrences: 120 },
+          { pattern: 'Pattern B', frequency: 32, successRate: 0.65, totalOccurrences: 95 },
+          { pattern: 'Pattern C', frequency: 28, successRate: 0.82, totalOccurrences: 85 },
+          { pattern: 'Pattern D', frequency: 19, successRate: 0.71, totalOccurrences: 65 },
+          { pattern: 'Pattern E', frequency: 15, successRate: 0.69, totalOccurrences: 55 }
+        ];
+      }
+    });
   }
 
   // Get trend analysis data
   static async getTrendData(): Promise<TrendData> {
-    try {
-      const response = await apiClient.get('/analytics/trends');
-      return response.data.data;
-    } catch (error) {
-      console.error('Error fetching trend data:', error);
-      // Return mock data as fallback
-      return {
-        actual: [
-          { x: 1, y: 2.1 }, { x: 2, y: 2.3 }, { x: 3, y: 2.0 }, { x: 4, y: 2.4 },
-          { x: 5, y: 1.9 }, { x: 6, y: 2.2 }, { x: 7, y: 2.1 }, { x: 8, y: 2.5 }
-        ],
-        predicted: [
-          { x: 1, y: 2.0 }, { x: 2, y: 2.2 }, { x: 3, y: 2.1 }, { x: 4, y: 2.3 },
-          { x: 5, y: 2.0 }, { x: 6, y: 2.1 }, { x: 7, y: 2.2 }, { x: 8, y: 2.4 }
-        ],
-        regression: [
-          { x: 1, y: 2.05 }, { x: 2, y: 2.15 }, { x: 3, y: 2.25 }, { x: 4, y: 2.35 },
-          { x: 5, y: 2.45 }, { x: 6, y: 2.55 }, { x: 7, y: 2.65 }, { x: 8, y: 2.75 }
-        ],
-        confidence: {
-          upper: [
-            { x: 1, y: 2.3 }, { x: 2, y: 2.4 }, { x: 3, y: 2.5 }, { x: 4, y: 2.6 },
-            { x: 5, y: 2.7 }, { x: 6, y: 2.8 }, { x: 7, y: 2.9 }, { x: 8, y: 3.0 }
+    return this.getCachedData('trends', async () => {
+      try {
+        const response = await apiClient.get('/analytics/trends');
+        return response.data.data;
+      } catch (error) {
+        console.error('Error fetching trend data:', error);
+        // Return mock data as fallback
+        return {
+          actual: [
+            { x: 1, y: 2.1 }, { x: 2, y: 2.3 }, { x: 3, y: 2.0 }, { x: 4, y: 2.4 },
+            { x: 5, y: 1.9 }, { x: 6, y: 2.2 }, { x: 7, y: 2.1 }, { x: 8, y: 2.5 }
           ],
-          lower: [
-            { x: 1, y: 1.8 }, { x: 2, y: 1.9 }, { x: 3, y: 2.0 }, { x: 4, y: 2.1 },
-            { x: 5, y: 2.2 }, { x: 6, y: 2.3 }, { x: 7, y: 2.4 }, { x: 8, y: 2.5 }
-          ]
-        }
-      };
-    }
+          predicted: [
+            { x: 1, y: 2.0 }, { x: 2, y: 2.2 }, { x: 3, y: 2.1 }, { x: 4, y: 2.3 },
+            { x: 5, y: 2.0 }, { x: 6, y: 2.1 }, { x: 7, y: 2.2 }, { x: 8, y: 2.4 }
+          ],
+          regression: [
+            { x: 1, y: 2.05 }, { x: 2, y: 2.15 }, { x: 3, y: 2.25 }, { x: 4, y: 2.35 },
+            { x: 5, y: 2.45 }, { x: 6, y: 2.55 }, { x: 7, y: 2.65 }, { x: 8, y: 2.75 }
+          ],
+          confidence: {
+            upper: [
+              { x: 1, y: 2.3 }, { x: 2, y: 2.4 }, { x: 3, y: 2.5 }, { x: 4, y: 2.6 },
+              { x: 5, y: 2.7 }, { x: 6, y: 2.8 }, { x: 7, y: 2.9 }, { x: 8, y: 3.0 }
+            ],
+            lower: [
+              { x: 1, y: 1.8 }, { x: 2, y: 1.9 }, { x: 3, y: 2.0 }, { x: 4, y: 2.1 },
+              { x: 5, y: 2.2 }, { x: 6, y: 2.3 }, { x: 7, y: 2.4 }, { x: 8, y: 2.5 }
+            ]
+          }
+        };
+      }
+    });
   }
 
   // Get pattern recognition data
   static async getPatternData(): Promise<PatternData[]> {
-    try {
-      const response = await apiClient.get('/analytics/patterns');
-      return response.data.data;
-    } catch (error) {
-      console.error('Error fetching pattern data:', error);
-      // Return mock data as fallback
-      return this.getPerformanceData();
-    }
+    return this.getCachedData('patterns', async () => {
+      try {
+        const response = await apiClient.get('/analytics/patterns');
+        return response.data.data;
+      } catch (error) {
+        console.error('Error fetching pattern data:', error);
+        // Return mock data as fallback
+        return this.getPerformanceData();
+      }
+    });
   }
 
   // Get accuracy metrics over time
   static async getAccuracyData(): Promise<AccuracyData> {
-    try {
-      const response = await apiClient.get('/analytics/accuracy');
-      return response.data.data;
-    } catch (error) {
-      console.error('Error fetching accuracy data:', error);
-      // Return mock data as fallback
-      return {
-        timestamps: [
-          new Date('2024-01-01'), new Date('2024-01-02'), new Date('2024-01-03'),
-          new Date('2024-01-04'), new Date('2024-01-05'), new Date('2024-01-06'),
-          new Date('2024-01-07'), new Date('2024-01-08')
-        ],
-        accuracy: [0.75, 0.78, 0.82, 0.79, 0.85, 0.81, 0.83, 0.87],
-        precision: [0.72, 0.75, 0.79, 0.76, 0.82, 0.78, 0.80, 0.84],
-        recall: [0.78, 0.81, 0.85, 0.82, 0.88, 0.84, 0.86, 0.90],
-        f1Score: [0.75, 0.78, 0.82, 0.79, 0.85, 0.81, 0.83, 0.87],
-        sampleSize: [150, 145, 160, 155, 170, 165, 175, 180]
-      };
-    }
+    return this.getCachedData('accuracy', async () => {
+      try {
+        const response = await apiClient.get('/analytics/accuracy');
+        return response.data.data;
+      } catch (error) {
+        console.error('Error fetching accuracy data:', error);
+        // Return mock data as fallback
+        return {
+          timestamps: [
+            new Date('2024-01-01'), new Date('2024-01-02'), new Date('2024-01-03'),
+            new Date('2024-01-04'), new Date('2024-01-05'), new Date('2024-01-06'),
+            new Date('2024-01-07'), new Date('2024-01-08')
+          ],
+          accuracy: [0.75, 0.78, 0.82, 0.79, 0.85, 0.81, 0.83, 0.87],
+          precision: [0.72, 0.75, 0.79, 0.76, 0.82, 0.78, 0.80, 0.84],
+          recall: [0.78, 0.81, 0.85, 0.82, 0.88, 0.84, 0.86, 0.90],
+          f1Score: [0.75, 0.78, 0.82, 0.79, 0.85, 0.81, 0.83, 0.87],
+          sampleSize: [150, 145, 160, 155, 170, 165, 175, 180]
+        };
+      }
+    });
   }
 
   // Get correlation heatmap data
   static async getCorrelationData(): Promise<CorrelationData> {
-    try {
-      const response = await apiClient.get('/analytics/correlations');
-      return response.data.data;
-    } catch (error) {
-      console.error('Error fetching correlation data:', error);
-      // Return mock data as fallback
-      return {
-        numbers: ['1', '2', '3', '4', '5', '6', '7', '8'],
-        correlations: [
-          [1.0, 0.3, 0.1, -0.2, 0.4, 0.2, -0.1, 0.3],
-          [0.3, 1.0, 0.5, 0.1, -0.3, 0.4, 0.2, -0.2],
-          [0.1, 0.5, 1.0, 0.3, 0.2, -0.1, 0.4, 0.1],
-          [-0.2, 0.1, 0.3, 1.0, 0.5, 0.2, -0.3, 0.4],
-          [0.4, -0.3, 0.2, 0.5, 1.0, 0.3, 0.1, -0.2],
-          [0.2, 0.4, -0.1, 0.2, 0.3, 1.0, 0.5, 0.1],
-          [-0.1, 0.2, 0.4, -0.3, 0.1, 0.5, 1.0, 0.3],
-          [0.3, -0.2, 0.1, 0.4, -0.2, 0.1, 0.3, 1.0]
-        ]
-      };
-    }
+    return this.getCachedData('correlations', async () => {
+      try {
+        const response = await apiClient.get('/analytics/correlations');
+        return response.data.data;
+      } catch (error) {
+        console.error('Error fetching correlation data:', error);
+        // Return mock data as fallback
+        return {
+          numbers: ['1', '2', '3', '4', '5', '6', '7', '8'],
+          correlations: [
+            [1.0, 0.3, 0.1, -0.2, 0.4, 0.2, -0.1, 0.3],
+            [0.3, 1.0, 0.5, 0.1, -0.3, 0.4, 0.2, -0.2],
+            [0.1, 0.5, 1.0, 0.3, 0.2, -0.1, 0.4, 0.1],
+            [-0.2, 0.1, 0.3, 1.0, 0.5, 0.2, -0.3, 0.4],
+            [0.4, -0.3, 0.2, 0.5, 1.0, 0.3, 0.1, -0.2],
+            [0.2, 0.4, -0.1, 0.2, 0.3, 1.0, 0.5, 0.1],
+            [-0.1, 0.2, 0.4, -0.3, 0.1, 0.5, 1.0, 0.3],
+            [0.3, -0.2, 0.1, 0.4, -0.2, 0.1, 0.3, 1.0]
+          ]
+        };
+      }
+    });
   }
 
   // Get risk assessment data
   static async getRiskData(): Promise<RiskData> {
-    try {
-      const response = await apiClient.get('/analytics/risk');
-      return response.data.data;
-    } catch (error) {
-      console.error('Error fetching risk data:', error);
-      // Return mock data as fallback
-      return {
-        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6'],
-        riskLevels: [2.1, 1.8, 2.5, 1.9, 2.2, 1.7],
-        confidenceIntervals: {
-          upper: [2.8, 2.4, 3.1, 2.6, 2.9, 2.3],
-          lower: [1.4, 1.2, 1.9, 1.2, 1.5, 1.1]
-        },
-        thresholds: {
-          high: 2.5,
-          medium: 2.0,
-          low: 1.5
-        }
-      };
-    }
+    return this.getCachedData('risk', async () => {
+      try {
+        const response = await apiClient.get('/analytics/risk');
+        return response.data.data;
+      } catch (error) {
+        console.error('Error fetching risk data:', error);
+        // Return mock data as fallback
+        return {
+          labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6'],
+          riskLevels: [2.1, 1.8, 2.5, 1.9, 2.2, 1.7],
+          confidenceIntervals: {
+            upper: [2.8, 2.4, 3.1, 2.6, 2.9, 2.3],
+            lower: [1.4, 1.2, 1.9, 1.2, 1.5, 1.1]
+          },
+          thresholds: {
+            high: 2.5,
+            medium: 2.0,
+            low: 1.5
+          }
+        };
+      }
+    });
   }
 }
 

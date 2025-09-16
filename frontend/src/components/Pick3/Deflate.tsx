@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { pick3DataManager } from '../../services/Pick3DataManager';
 import './Deflate.css';
 
 interface DeflateProps {
@@ -14,10 +15,56 @@ interface Combination {
   highLowPattern: string;
 }
 
+interface DrawData {
+  date: string;
+  numbers?: number[];
+  midday?: string;
+  evening?: string;
+}
+
 type FilterValue = 'all' | 'single' | 'double' | 'triple' | number | number[] | string[];
 
 const Deflate: React.FC<DeflateProps> = ({ className = '' }) => {
   const [inputCombinations, setInputCombinations] = useState<string>('');
+  const [historicalData, setHistoricalData] = useState<DrawData[]>([]);
+  const [drawCount, setDrawCount] = useState<number>(60);
+  const [loading, setLoading] = useState(false);
+  const [customDrawCount, setCustomDrawCount] = useState<string>('60');
+
+  // Load historical data on component mount
+  useEffect(() => {
+    loadHistoricalData();
+  }, []);
+
+  const loadHistoricalData = async () => {
+    setLoading(true);
+    try {
+      const allDraws = pick3DataManager.getDraws();
+      setHistoricalData(allDraws);
+      console.log(`Loaded ${allDraws.length} historical draws for Deflate`);
+    } catch (error) {
+      console.error('Error loading historical data:', error);
+      setHistoricalData([]);
+    }
+    setLoading(false);
+  };
+
+  const handleDrawCountChange = (count: number) => {
+    setDrawCount(count);
+    setCustomDrawCount(count.toString());
+  };
+
+  const handleCustomDrawCountSubmit = () => {
+    const count = parseInt(customDrawCount);
+    if (!isNaN(count) && count > 0 && count <= historicalData.length) {
+      setDrawCount(count);
+    }
+  };
+
+  // Get the selected number of recent draws
+  const selectedDraws = useMemo(() => {
+    return historicalData.slice(-drawCount);
+  }, [historicalData, drawCount]);
   const [filters, setFilters] = useState({
     type: 'all' as 'all' | 'single' | 'double' | 'triple',
     sumMin: 0,
@@ -180,6 +227,58 @@ const Deflate: React.FC<DeflateProps> = ({ className = '' }) => {
           <div className="input-stats">
             <span>Parsed: {statistics.original}</span>
             <span>Unique Boxes: {statistics.uniqueBoxes}</span>
+          </div>
+        </div>
+
+        <div className="historical-data-section">
+          <h3>Historical Data Analysis</h3>
+          <div className="draw-count-selector">
+            <label>Analyze last </label>
+            <select
+              value={drawCount}
+              onChange={(e) => handleDrawCountChange(parseInt(e.target.value))}
+            >
+              <option value={30}>30 draws</option>
+              <option value={60}>60 draws</option>
+              <option value={90}>90 draws</option>
+              <option value={120}>120 draws</option>
+              <option value={historicalData.length}>All draws ({historicalData.length})</option>
+            </select>
+            <div className="custom-draw-input">
+              <input
+                type="number"
+                value={customDrawCount}
+                onChange={(e) => setCustomDrawCount(e.target.value)}
+                placeholder="Custom count"
+                min="1"
+                max={historicalData.length}
+              />
+              <button onClick={handleCustomDrawCountSubmit}>Set</button>
+            </div>
+          </div>
+          {loading && <div className="loading-indicator">Loading historical data...</div>}
+          <div className="data-info">
+            <span>Available draws: {historicalData.length}</span>
+            <span>Analyzing: {selectedDraws.length} draws</span>
+            <button
+              onClick={() => {
+                const combinations = selectedDraws.map(draw => {
+                  if (Array.isArray(draw.numbers)) {
+                    return draw.numbers.slice(0, 3).join('');
+                  } else if (typeof draw.midday === 'string') {
+                    return draw.midday.replace(/\D/g, '').slice(0, 3);
+                  } else if (typeof draw.evening === 'string') {
+                    return draw.evening.replace(/\D/g, '').slice(0, 3);
+                  }
+                  return '';
+                }).filter(combo => combo.length === 3).join('\n');
+                setInputCombinations(combinations);
+              }}
+              disabled={selectedDraws.length === 0}
+              className="load-historical-btn"
+            >
+              Load Historical Combinations
+            </button>
           </div>
         </div>
 

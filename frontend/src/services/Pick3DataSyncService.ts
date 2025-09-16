@@ -30,7 +30,10 @@ export class Pick3DataSyncService {
   private processor: Pick3DataProcessor;
 
   constructor() {
-    this.scraper = new Pick3DataScraper();
+    this.scraper = new Pick3DataScraper({
+      state: 'indiana',
+      baseUrl: 'https://www.lotteryusa.com/indiana'
+    });
     this.processor = new Pick3DataProcessor();
   }
 

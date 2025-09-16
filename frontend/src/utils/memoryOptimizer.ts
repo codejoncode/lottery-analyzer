@@ -240,6 +240,12 @@ export class MemoryOptimizer {
    * Force garbage collection if available
    */
   forceGC(): void {
+    // Only run in browser environment
+    if (typeof window === 'undefined') {
+      console.log('SSR environment detected, skipping garbage collection');
+      return;
+    }
+
     if (this.options.enableGC && 'gc' in window) {
       (window as ExtendedWindow).gc!();
       console.log('🧹 Forced garbage collection');
@@ -265,8 +271,17 @@ export class MemoryOptimizer {
     // Clean up weak references
     this.cleanupWeakRefs();
 
-    // Optimize performance optimizer
-    performanceOptimizer.optimizeMemory();
+    // Optimize performance optimizer (only in browser)
+    if (typeof window !== 'undefined') {
+      try {
+        // Check if performanceOptimizer has optimizeMemory method
+        if (performanceOptimizer && typeof performanceOptimizer.optimizeMemory === 'function') {
+          performanceOptimizer.optimizeMemory();
+        }
+      } catch (error) {
+        console.warn('Performance optimizer not available:', error);
+      }
+    }
   }
 
   /**
@@ -302,6 +317,12 @@ export class MemoryOptimizer {
    * Start automatic cleanup timer
    */
   private startCleanupTimer(): void {
+    // Only start timer in browser environment
+    if (typeof window === 'undefined') {
+      console.log('SSR environment detected, skipping cleanup timer');
+      return;
+    }
+
     if (this.cleanupTimer) {
       clearInterval(this.cleanupTimer);
     }
@@ -608,8 +629,26 @@ export class EfficientMap<K, V> {
   }
 }
 
-// Singleton instance
-export const memoryOptimizer = new MemoryOptimizer();
+// Singleton instance - only create in browser environment
+let memoryOptimizerInstance: MemoryOptimizer | null = null;
+
+const createMemoryOptimizer = (): MemoryOptimizer => {
+  if (typeof window === 'undefined') {
+    // Return a minimal instance for SSR
+    return {
+      optimizeMemory: () => console.log('Memory optimization skipped in SSR'),
+      getMemoryStats: () => ({ used: 0, total: 0, limit: 0, efficiency: 1, fragmentation: 0 }),
+      forceGC: () => console.log('GC skipped in SSR')
+    } as MemoryOptimizer;
+  }
+
+  if (!memoryOptimizerInstance) {
+    memoryOptimizerInstance = new MemoryOptimizer();
+  }
+  return memoryOptimizerInstance;
+};
+
+export const memoryOptimizer = createMemoryOptimizer();
 
 // Utility functions
 export const optimizeMemoryUsage = () => memoryOptimizer.optimizeMemory();

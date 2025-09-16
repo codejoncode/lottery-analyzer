@@ -26,7 +26,7 @@ import StrategyTesting from "../../src/components/StrategyTesting";
 import PerformanceMetrics from "../../src/components/PerformanceMetrics";
 import ParameterTuning from "../../src/components/ParameterTuning";
 import HistoricalValidation from "../../src/components/HistoricalValidation";
-import DataSyncManager from "../../src/components/DataSyncManager";
+import DataEntry from "../../src/components/Pick3/DataEntry";
 
 export function meta(_: Route.MetaArgs) {
   return [
@@ -105,6 +105,12 @@ export default function Home() {
     setTimeout(() => setIsLoading(false), 200);
   };
 
+  const handleHomeClick = () => {
+    setActiveSection(null);
+    setActiveSubsection(null);
+    setIsLoading(false);
+  };
+
   // Generate breadcrumb items
   const getBreadcrumbItems = () => {
     const items: Array<{ label: string; href?: string; active?: boolean }> = [
@@ -127,19 +133,40 @@ export default function Home() {
       <div>
         <nav className="bg-blue-600 text-white p-4 mb-6">
           <div className="max-w-6xl mx-auto">
-            <h1 className="text-2xl font-bold mb-4">🎯 Pick 3 Lottery Analyzer</h1>
-            <div className="flex flex-wrap gap-4 text-sm">
-              {Object.keys(sections).map((section) => (
-                <button
-                  key={section}
-                  onClick={() => handleSectionClick(section)}
-                  className={`hover:text-blue-200 font-medium px-3 py-1 rounded transition-colors ${
-                    activeSection === section ? 'bg-blue-700' : ''
-                  }`}
-                >
-                  {section}
-                </button>
-              ))}
+            <h1 className="text-2xl font-bold mb-4">🎯 Lottery Analyzer</h1>
+
+            {/* Powerball Section */}
+            <div className="mb-4">
+              <h2 className="text-lg font-semibold mb-2 text-blue-200">🎲 Powerball Analysis</h2>
+              <div className="flex flex-wrap gap-2 text-sm">
+                <a href="/dashboard" className="hover:text-blue-200 font-medium px-3 py-1 rounded transition-colors bg-blue-700">Dashboard</a>
+                <a href="/predictions" className="hover:text-blue-200 font-medium px-3 py-1 rounded transition-colors bg-blue-700">Predictions</a>
+                <a href="/scoring" className="hover:text-blue-200 font-medium px-3 py-1 rounded transition-colors bg-blue-700">Scoring</a>
+                <a href="/combinations" className="hover:text-blue-200 font-medium px-3 py-1 rounded transition-colors bg-blue-700">Combinations</a>
+                <a href="/pairs" className="hover:text-blue-200 font-medium px-3 py-1 rounded transition-colors bg-blue-700">Pairs</a>
+                <a href="/triples" className="hover:text-blue-200 font-medium px-3 py-1 rounded transition-colors bg-blue-700">Triples</a>
+                <a href="/grid" className="hover:text-blue-200 font-medium px-3 py-1 rounded transition-colors bg-blue-700">Grid</a>
+                <a href="/skip" className="hover:text-blue-200 font-medium px-3 py-1 rounded transition-colors bg-blue-700">Skip</a>
+                <a href="/column-engine" className="hover:text-blue-200 font-medium px-3 py-1 rounded transition-colors bg-blue-700">Column Engine</a>
+                <a href="/skip-tracker" className="hover:text-blue-200 font-medium px-3 py-1 rounded transition-colors bg-blue-700">Skip Tracker</a>
+              </div>
+            </div>
+
+            {/* Pick 3 Section */}
+            <div className="mb-4">
+              <h2 className="text-lg font-semibold mb-2 text-green-200">🎯 Pick 3 Analysis</h2>
+              <div className="flex flex-wrap gap-2 text-sm">
+                <a href="/" onClick={handleHomeClick} className="hover:text-green-200 font-medium px-3 py-1 rounded transition-colors bg-green-700">Home</a>
+                <a href="/analysis" className="hover:text-green-200 font-medium px-3 py-1 rounded transition-colors bg-green-700">Number Analysis</a>
+                <a href="/column-analysis" className="hover:text-green-200 font-medium px-3 py-1 rounded transition-colors bg-green-700">Column Analysis</a>
+                <a href="/draw-summary" className="hover:text-green-200 font-medium px-3 py-1 rounded transition-colors bg-green-700">Draw Summary</a>
+                <a href="/pick3-pairs" className="hover:text-green-200 font-medium px-3 py-1 rounded transition-colors bg-green-700">Pairs Analysis</a>
+                <a href="/inspector3" className="hover:text-green-200 font-medium px-3 py-1 rounded transition-colors bg-green-700">Inspector 3</a>
+                <a href="/deflate" className="hover:text-green-200 font-medium px-3 py-1 rounded transition-colors bg-green-700">Deflate</a>
+                <a href="/pick3-scoring" className="hover:text-green-200 font-medium px-3 py-1 rounded transition-colors bg-green-700">Pick3 Scoring</a>
+                <a href="/pick3-backtesting" className="hover:text-green-200 font-medium px-3 py-1 rounded transition-colors bg-green-700">Backtesting</a>
+                <a href="/data-entry" className="hover:text-green-200 font-medium px-3 py-1 rounded transition-colors bg-green-700">Data Entry</a>
+              </div>
             </div>
           </div>
         </nav>
@@ -254,13 +281,13 @@ export default function Home() {
               <HistoricalValidation />
             )}
             {activeSection === "Data Management" && activeSubsection === "Data Sync" && (
-              <DataSyncManager />
+              <DataEntry />
             )}
             {activeSection === "Data Management" && activeSubsection === "Analysis" && (
-              <DataSyncManager />
+              <DataEntry />
             )}
             {activeSection === "Data Management" && activeSubsection === "Statistics" && (
-              <DataSyncManager />
+              <DataEntry />
             )}
             {!(activeSection === "Pick 3 Charts" && (activeSubsection === "Combinations" || activeSubsection === "Sums Analysis" || activeSubsection === "Root Sums" || activeSubsection === "Sum Last Digit" || activeSubsection === "VTrac Analysis")) &&
              !(activeSection === "Inspector 3" && (activeSubsection === "Type Analysis" || activeSubsection === "Pair Analysis" || activeSubsection === "Sum Analysis" || activeSubsection === "Column Mapping")) &&

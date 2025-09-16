@@ -1,35 +1,57 @@
 // Test file to verify Pick3DataManager works in browser
-import { pick3DataManager, type Pick3Draw } from './Pick3DataManager';
+import { pick3DataManager } from './Pick3DataManager';
+import { pick3DataSyncService } from './Pick3DataSyncService';
 
-// Test basic functionality
-console.log('Testing Pick3DataManager...');
+// Clear existing data first
+console.log('Clearing existing data...');
+pick3DataManager.clearData();
 
-// Add some test data
-const testDraws: Pick3Draw[] = [
-  {
-    date: '2025-01-01',
-    midday: '123',
-    evening: '456',
-    timestamp: Date.now()
-  },
-  {
-    date: '2025-01-02',
-    midday: '789',
-    evening: '012',
-    timestamp: Date.now() + 86400000
+// Test Indiana Daily 3 data sync
+console.log('Testing Indiana Daily 3 data sync...');
+
+async function testIndianaDataSync() {
+  try {
+    console.log('Starting data sync for Indiana Daily 3...');
+
+    // Sync recent data (last 30 days)
+    const endDate = new Date().toISOString().split('T')[0];
+    const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+    const result = await pick3DataSyncService.syncData({
+      startDate,
+      endDate,
+      forceRefresh: true
+    });
+
+    console.log('Sync result:', result);
+
+    if (result.success) {
+      console.log(`Successfully synced ${result.newDraws} new draws`);
+
+      // Check data stats
+      const stats = pick3DataManager.getDataStats();
+      console.log('Data stats:', stats);
+
+      // Get recent draws
+      const recentDraws = pick3DataManager.getDraws(startDate, endDate);
+      console.log('Recent draws:', recentDraws.slice(0, 5)); // Show first 5
+
+      // Check for midday/evening draws
+      const drawsWithBoth = recentDraws.filter(d => d.midday && d.evening);
+      const drawsWithMiddayOnly = recentDraws.filter(d => d.midday && !d.evening);
+      const drawsWithEveningOnly = recentDraws.filter(d => !d.midday && d.evening);
+
+      console.log(`Draws with both midday and evening: ${drawsWithBoth.length}`);
+      console.log(`Draws with midday only: ${drawsWithMiddayOnly.length}`);
+      console.log(`Draws with evening only: ${drawsWithEveningOnly.length}`);
+
+    } else {
+      console.error('Sync failed:', result.errors);
+    }
+
+  } catch (error) {
+    console.error('Error during data sync test:', error);
   }
-];
+}
 
-pick3DataManager.addDraws(testDraws);
-
-// Test retrieval
-const allDraws = pick3DataManager.getDraws();
-console.log('All draws:', allDraws);
-
-const stats = pick3DataManager.getDataStats();
-console.log('Data stats:', stats);
-
-// Test localStorage persistence
-console.log('Data saved to localStorage:', localStorage.getItem('pick3-data') !== null);
-
-console.log('Pick3DataManager test completed successfully!');
+testIndianaDataSync();

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { pick3Analyzer } from '../utils/pick3Analyzer';
+import { pick3DataManager } from '../services/Pick3DataManager';
 
 interface Prediction {
   combination: string;
@@ -10,6 +11,9 @@ interface Prediction {
   hotStreak: number;
   lastSeen: number;
   predictedDraws: string[];
+  pattern: string;
+  frequency: number;
+  dueFactor: number;
 }
 
 const Top20Predictions: React.FC = () => {
@@ -17,54 +21,221 @@ const Top20Predictions: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<Prediction | null>(null);
   const [timeframe, setTimeframe] = useState<'next' | 'week' | 'month'>('next');
+  const [historicalData, setHistoricalData] = useState<any[]>([]);
+
+  // Load historical data on component mount
+  useEffect(() => {
+    loadHistoricalData();
+  }, []);
+
+  const loadHistoricalData = async () => {
+    try {
+      // Get all available historical data
+      const allDraws = pick3DataManager.getDraws();
+      setHistoricalData(allDraws);
+      console.log(`Loaded ${allDraws.length} historical draws for analysis`);
+    } catch (error) {
+      console.error('Error loading historical data:', error);
+      setHistoricalData([]);
+    }
+  };
 
   const generatePredictions = () => {
+    if (historicalData.length === 0) {
+      console.log('No historical data available for predictions');
+      return;
+    }
+
     setLoading(true);
 
-    // Generate top 20 predictions based on scoring algorithm
-    const allCombos = pick3Analyzer.getAllCombinations();
-    const scoredPredictions: Prediction[] = allCombos.map((combo, index) => {
-      const comboStr = typeof combo === 'string' ? combo : combo.toString();
-      const score = Math.random() * 0.5 + 0.5; // Mock scoring
-      const confidence = Math.min(score * 100 + Math.random() * 20, 95);
-      const trend = Math.random() > 0.6 ? 'up' : Math.random() > 0.3 ? 'stable' : 'down';
-      const hotStreak = Math.floor(Math.random() * 5);
-      const lastSeen = Math.floor(Math.random() * 30);
+    try {
+      // Analyze historical patterns and frequencies
+      const patternAnalysis = analyzeHistoricalPatterns();
+      const scoredPredictions: Prediction[] = patternAnalysis.map((pattern, index) => {
+        const score = calculatePredictionScore(pattern);
+        const confidence = calculateConfidence(pattern, historicalData.length);
+        const trend = determineTrend(pattern);
+        const hotStreak = pattern.hotStreak || 0;
+        const lastSeen = pattern.lastSeen || 0;
 
-      // Generate predicted draws based on timeframe
-      const drawCount = timeframe === 'next' ? 1 : timeframe === 'week' ? 7 : 30;
-      const predictedDraws = [];
-      for (let i = 0; i < drawCount; i++) {
-        const randomCombo = allCombos[Math.floor(Math.random() * allCombos.length)];
-        predictedDraws.push(typeof randomCombo === 'string' ? randomCombo : randomCombo.toString());
-      }
+        // Only include combinations not seen in last 50 draws (user's requirement)
+        if (lastSeen < 50) {
+          return null; // Skip recently drawn combinations
+        }
 
-      return {
-        combination: comboStr,
-        score,
-        confidence,
-        rank: index + 1,
-        trend,
-        hotStreak,
-        lastSeen,
-        predictedDraws
-      };
-    });
+        return {
+          combination: pattern.combination,
+          score,
+          confidence,
+          rank: 0, // Will be set after sorting
+          trend,
+          hotStreak,
+          lastSeen,
+          predictedDraws: generatePredictedDraws(pattern, timeframe),
+          pattern: pattern.patternType,
+          frequency: pattern.frequency,
+          dueFactor: pattern.dueFactor
+        };
+      }).filter(Boolean) as Prediction[]; // Remove null entries
 
-    // Sort by score and take top 20
-    scoredPredictions.sort((a, b) => b.score - a.score);
-    const top20 = scoredPredictions.slice(0, 20).map((pred, index) => ({
-      ...pred,
-      rank: index + 1
-    }));
+      // Sort by score and take top 20
+      scoredPredictions.sort((a, b) => b.score - a.score);
+      const top20 = scoredPredictions.slice(0, 20).map((pred, index) => ({
+        ...pred,
+        rank: index + 1
+      }));
 
-    setPredictions(top20);
+      setPredictions(top20);
+    } catch (error) {
+      console.error('Error generating predictions:', error);
+      setPredictions([]);
+    }
+
     setLoading(false);
   };
 
+  const analyzeHistoricalPatterns = () => {
+    const patterns: any[] = [];
+    const combinationFrequency = new Map<string, number>();
+    const lastSeenMap = new Map<string, number>();
+    const hotStreaks = new Map<string, number>();
+
+    // Analyze each historical draw
+    historicalData.forEach((draw, index) => {
+      const combo = Array.isArray(draw.numbers)
+        ? draw.numbers.join('')
+        : typeof draw.midday === 'string' ? draw.midday : draw.evening || '';
+
+      if (combo) {
+        // Update frequency
+        combinationFrequency.set(combo, (combinationFrequency.get(combo) || 0) + 1);
+
+        // Update last seen
+        lastSeenMap.set(combo, index);
+
+        // Check for hot streaks (consecutive appearances)
+        const prevDraw = historicalData[index - 1];
+        if (prevDraw) {
+          const prevCombo = Array.isArray(prevDraw.numbers)
+            ? prevDraw.numbers.join('')
+            : typeof prevDraw.midday === 'string' ? prevDraw.midday : prevDraw.evening || '';
+
+          if (prevCombo === combo) {
+            hotStreaks.set(combo, (hotStreaks.get(combo) || 0) + 1);
+          } else {
+            hotStreaks.set(combo, 0);
+          }
+        }
+      }
+    });
+
+    // Convert to pattern analysis
+    combinationFrequency.forEach((frequency, combination) => {
+      const lastSeen = lastSeenMap.get(combination) || 0;
+      const hotStreak = hotStreaks.get(combination) || 0;
+      const expectedFrequency = historicalData.length / 1000; // Expected frequency for random
+      const dueFactor = expectedFrequency / Math.max(frequency, 1); // How "due" it is
+
+      patterns.push({
+        combination,
+        frequency,
+        lastSeen: historicalData.length - lastSeen, // Convert to draws ago
+        hotStreak,
+        dueFactor,
+        patternType: determinePatternType(combination)
+      });
+    });
+
+    return patterns;
+  };
+
+  const determinePatternType = (combination: string): string => {
+    const digits = combination.split('').map(Number);
+    const uniqueDigits = new Set(digits);
+
+    if (uniqueDigits.size === 1) return 'Triple';
+    if (uniqueDigits.size === 2) return 'Double';
+    if (uniqueDigits.size === 3) return 'Single';
+
+    // Check for consecutive numbers
+    const sorted = [...digits].sort((a, b) => a - b);
+    if (sorted[2] - sorted[1] === 1 && sorted[1] - sorted[0] === 1) return 'Consecutive';
+
+    // Check for even/odd patterns
+    const evenCount = digits.filter(d => d % 2 === 0).length;
+    if (evenCount === 3) return 'All Even';
+    if (evenCount === 0) return 'All Odd';
+    if (evenCount === 2) return 'Mostly Even';
+    if (evenCount === 1) return 'Mostly Odd';
+
+    return 'Mixed';
+  };
+
+  const calculatePredictionScore = (pattern: any): number => {
+    let score = 0;
+
+    // Base score from due factor (higher = more due)
+    score += Math.min(pattern.dueFactor * 0.3, 0.3);
+
+    // Bonus for longer absence (but not too recent)
+    if (pattern.lastSeen > 100) {
+      score += 0.2;
+    } else if (pattern.lastSeen > 50) {
+      score += 0.1;
+    }
+
+    // Small bonus for hot streaks (but not too much)
+    if (pattern.hotStreak > 0 && pattern.hotStreak <= 3) {
+      score += pattern.hotStreak * 0.05;
+    }
+
+    // Pattern-based bonuses
+    switch (pattern.patternType) {
+      case 'Single': score += 0.1; break;
+      case 'Double': score += 0.05; break;
+      case 'Triple': score += 0.02; break;
+      case 'Consecutive': score += 0.08; break;
+    }
+
+    return Math.min(score, 0.95); // Cap at 95%
+  };
+
+  const calculateConfidence = (pattern: any, totalDraws: number): number => {
+    // Confidence based on historical data size and pattern consistency
+    const baseConfidence = Math.min(totalDraws / 1000, 1) * 100;
+    const patternConsistency = pattern.frequency / Math.max(pattern.lastSeen / 100, 1);
+
+    return Math.min(baseConfidence * (0.5 + patternConsistency * 0.5), 95);
+  };
+
+  const determineTrend = (pattern: any): 'up' | 'down' | 'stable' => {
+    if (pattern.hotStreak > 2) return 'up';
+    if (pattern.lastSeen > 200) return 'down';
+    return 'stable';
+  };
+
+  const generatePredictedDraws = (pattern: any, timeframe: string): string[] => {
+    const drawCount = timeframe === 'next' ? 1 : timeframe === 'week' ? 7 : 30;
+    const predictedDraws = [];
+
+    // Generate variations of the pattern for prediction
+    for (let i = 0; i < drawCount; i++) {
+      // Create slight variations of the combination
+      const baseDigits = pattern.combination.split('').map(Number);
+      const variation = baseDigits.map((digit: number) =>
+        Math.max(0, Math.min(9, digit + Math.floor(Math.random() * 3) - 1))
+      );
+      predictedDraws.push(variation.join(''));
+    }
+
+    return predictedDraws;
+  };
+
   useEffect(() => {
-    generatePredictions();
-  }, [timeframe]);
+    if (historicalData.length > 0) {
+      generatePredictions();
+    }
+  }, [timeframe, historicalData]);
 
   const getTrendIcon = (trend: string) => {
     switch (trend) {
@@ -95,8 +266,36 @@ const Top20Predictions: React.FC = () => {
       <div className="mb-6">
         <h2 className="text-2xl font-bold mb-2">🎯 Top 20 Predictions</h2>
         <p className="text-gray-600 mb-4">
-          AI-powered predictions for the most likely Pick 3 combinations
+          AI-powered predictions based on {historicalData.length} historical draws
         </p>
+
+        {/* Data Status Indicator */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-blue-800">Prediction Quality</h3>
+              <p className="text-sm text-blue-600">
+                Using {historicalData.length} historical draws for analysis
+                {historicalData.length > 1000 ? ' (Excellent data quality)' :
+                 historicalData.length > 500 ? ' (Good data quality)' :
+                 historicalData.length > 100 ? ' (Fair data quality)' :
+                 ' (Limited data - predictions may be less accurate)'}
+              </p>
+            </div>
+            <div className="text-right">
+              <div className="text-2xl font-bold text-blue-600">
+                {historicalData.length > 1000 ? '🟢' :
+                 historicalData.length > 500 ? '🟡' :
+                 historicalData.length > 100 ? '🟠' : '🔴'}
+              </div>
+              <div className="text-sm text-blue-600">
+                {historicalData.length > 1000 ? 'Excellent' :
+                 historicalData.length > 500 ? 'Good' :
+                 historicalData.length > 100 ? 'Fair' : 'Limited'}
+              </div>
+            </div>
+          </div>
+        </div>
 
         <div className="flex items-center gap-4 mb-4">
           <div className="flex items-center gap-2">
@@ -256,9 +455,21 @@ const Top20Predictions: React.FC = () => {
                       </span>
                     </div>
                     <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                      <span className="font-medium">Last Seen:</span>
-                      <span className="text-lg font-bold text-purple-600">
-                        {selectedPrediction.lastSeen} draws ago
+                      <span className="font-medium">Pattern:</span>
+                      <span className="text-lg font-bold text-indigo-600">
+                        {selectedPrediction.pattern}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                      <span className="font-medium">Historical Frequency:</span>
+                      <span className="text-lg font-bold text-teal-600">
+                        {selectedPrediction.frequency} times
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                      <span className="font-medium">Due Factor:</span>
+                      <span className="text-lg font-bold text-pink-600">
+                        {selectedPrediction.dueFactor.toFixed(2)}x
                       </span>
                     </div>
                   </div>
