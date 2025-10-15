@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router';
 import DataEntry from '../components/Pick3/DataEntry';
 
@@ -37,79 +37,47 @@ describe('Navigation Tests', () => {
     vi.clearAllMocks();
   });
 
-  describe('Home Button Navigation', () => {
-    it('should navigate to home when home button is clicked', () => {
-      // Mock window.location
-      const mockLocation = { href: '' };
-      Object.defineProperty(window, 'location', {
-        value: mockLocation,
-        writable: true
-      });
-
+  describe('DataEntry Component Functionality', () => {
+    it('should render the data entry form', () => {
       render(
         <BrowserRouter>
           <DataEntry />
         </BrowserRouter>
       );
 
-      // Since DataEntry doesn't have a home button, let's test the data-entry route
-      // which does have navigation
-      const homeLink = screen.getByRole('link', { name: /home/i });
-      expect(homeLink).toBeInTheDocument();
-      expect(homeLink).toHaveAttribute('href', '/');
+      // Check for form elements
+      expect(screen.getByText(/Indiana Daily 3 Data Entry/i)).toBeInTheDocument();
+      expect(screen.getByText(/Single Draw Entry/i)).toBeInTheDocument();
+      expect(screen.getByText(/Bulk Data Entry/i)).toBeInTheDocument();
     });
 
-    it('should have working navigation links on all screens', () => {
-      // Test that navigation links exist and have correct hrefs
-      const navigationLinks = [
-        { text: 'Home', href: '/' },
-        { text: 'Analysis', href: '/analysis' },
-        { text: 'Inspector 3', href: '/inspector3' },
-        { text: 'Deflate', href: '/deflate' },
-        { text: 'Dashboard', href: '/dashboard' },
-        { text: 'Predictions', href: '/predictions' },
-        { text: 'Scoring', href: '/scoring' },
-        { text: 'Combinations', href: '/combinations' },
-        { text: 'Pairs', href: '/pairs' },
-        { text: 'Triples', href: '/triples' },
-        { text: 'Grid', href: '/grid' },
-        { text: 'Skip', href: '/skip' },
-        { text: 'Column Engine', href: '/column-engine' },
-        { text: 'Skip Tracker', href: '/skip-tracker' },
-        { text: 'Pick3 Scoring', href: '/pick3-scoring' },
-        { text: 'Backtesting', href: '/pick3-backtesting' },
-        { text: 'Column Analysis', href: '/column-analysis' },
-        { text: 'Draw Summary', href: '/draw-summary' },
-        { text: 'Pick3 Pairs', href: '/pick3-pairs' }
-      ];
-
-      navigationLinks.forEach(({ text, href }) => {
-        const link = screen.getByRole('link', { name: new RegExp(text, 'i') });
-        expect(link).toBeInTheDocument();
-        expect(link).toHaveAttribute('href', href);
-      });
-    });
-
-    it('should handle navigation state changes correctly', () => {
-      // Test that clicking navigation links updates the URL
-      const mockLocation = { href: '' };
-      Object.defineProperty(window, 'location', {
-        value: mockLocation,
-        writable: true
-      });
-
+    it('should have date input field', () => {
       render(
         <BrowserRouter>
           <DataEntry />
         </BrowserRouter>
       );
 
-      const analysisLink = screen.getByRole('link', { name: /analysis/i });
-      fireEvent.click(analysisLink);
+      // Query by type attribute since label doesn't have htmlFor
+      const dateInput = document.querySelector('input[type="date"]');
+      expect(dateInput).toBeInTheDocument();
+      expect(dateInput).toHaveAttribute('type', 'date');
+    });
 
-      // In a real scenario, this would navigate to /analysis
-      // For testing purposes, we verify the link exists and is clickable
-      expect(analysisLink).toBeInTheDocument();
+    it('should have midday and evening input fields', () => {
+      render(
+        <BrowserRouter>
+          <DataEntry />
+        </BrowserRouter>
+      );
+
+      const middayInput = screen.getByPlaceholderText('123');
+      const eveningInput = screen.getByPlaceholderText('456');
+      
+      expect(middayInput).toBeInTheDocument();
+      expect(eveningInput).toBeInTheDocument();
+      expect(middayInput).toHaveAttribute('maxlength', '3');
+      expect(eveningInput).toHaveAttribute('maxlength', '3');
     });
   });
 

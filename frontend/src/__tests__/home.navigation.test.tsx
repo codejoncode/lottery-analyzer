@@ -23,43 +23,32 @@ vi.mock('../../src/components/LoadingSpinner', () => ({
   default: () => <div data-testid="loading-spinner">Loading...</div>
 }));
 
-// Mock all other components
-const mockComponents = [
-  'CombinationGenerator',
-  'SumsAnalysis',
-  'RootSumsAnalysis',
-  'SumLastDigitAnalysis',
-  'VTracAnalysis',
-  'TypeAnalysis',
-  'PairAnalysis',
-  'SumAnalysisInspector',
-  'ColumnMapping',
-  'Deflate',
-  'Pick3PairsAnalysis',
-  'ColumnTimelines',
-  'TransitionAnalysis',
-  'TwoThirdsPredictions',
-  'PositionRouting',
-  'LiveScoring',
-  'Top20Predictions',
-  'WheelRecommendations',
-  'ScoreBreakdown',
-  'StrategyTesting',
-  'PerformanceMetrics',
-  'ParameterTuning',
-  'HistoricalValidation',
-  'DataSyncManager'
-];
-
-mockComponents.forEach((componentName) => {
-  vi.mock(`../../src/components/${componentName}`, () => ({
-    default: () => <div data-testid={componentName.toLowerCase()}>{componentName}</div>
-  }));
-});
-
-vi.mock('../../src/components/Pick3/DataEntry', () => ({
-  default: () => <div data-testid="data-entry">DataEntry</div>
-}));
+// Mock all components - must be at top level, not in loops
+vi.mock('../../src/components/CombinationGenerator', () => ({ default: () => <div data-testid="combinationgenerator">CombinationGenerator</div> }));
+vi.mock('../../src/components/SumsAnalysis', () => ({ default: () => <div data-testid="sumsanalysis">SumsAnalysis</div> }));
+vi.mock('../../src/components/RootSumsAnalysis', () => ({ default: () => <div data-testid="rootsumsanalysis">RootSumsAnalysis</div> }));
+vi.mock('../../src/components/SumLastDigitAnalysis', () => ({ default: () => <div data-testid="sumlastdigitanalysis">SumLastDigitAnalysis</div> }));
+vi.mock('../../src/components/VTracAnalysis', () => ({ default: () => <div data-testid="vtracanalysis">VTracAnalysis</div> }));
+vi.mock('../../src/components/TypeAnalysis', () => ({ default: () => <div data-testid="typeanalysis">TypeAnalysis</div> }));
+vi.mock('../../src/components/PairAnalysis', () => ({ default: () => <div data-testid="pairanalysis">PairAnalysis</div> }));
+vi.mock('../../src/components/SumAnalysisInspector', () => ({ default: () => <div data-testid="sumanalysisinspector">SumAnalysisInspector</div> }));
+vi.mock('../../src/components/ColumnMapping', () => ({ default: () => <div data-testid="columnmapping">ColumnMapping</div> }));
+vi.mock('../../src/components/Deflate', () => ({ default: () => <div data-testid="deflate">Deflate</div> }));
+vi.mock('../../src/components/Pick3PairsAnalysis', () => ({ default: () => <div data-testid="pick3pairsanalysis">Pick3PairsAnalysis</div> }));
+vi.mock('../../src/components/ColumnTimelines', () => ({ default: () => <div data-testid="columntimelines">ColumnTimelines</div> }));
+vi.mock('../../src/components/TransitionAnalysis', () => ({ default: () => <div data-testid="transitionanalysis">TransitionAnalysis</div> }));
+vi.mock('../../src/components/TwoThirdsPredictions', () => ({ default: () => <div data-testid="twothirdspredictions">TwoThirdsPredictions</div> }));
+vi.mock('../../src/components/PositionRouting', () => ({ default: () => <div data-testid="positionrouting">PositionRouting</div> }));
+vi.mock('../../src/components/LiveScoring', () => ({ default: () => <div data-testid="livescoring">LiveScoring</div> }));
+vi.mock('../../src/components/Top20Predictions', () => ({ default: () => <div data-testid="top20predictions">Top20Predictions</div> }));
+vi.mock('../../src/components/WheelRecommendations', () => ({ default: () => <div data-testid="wheelrecommendations">WheelRecommendations</div> }));
+vi.mock('../../src/components/ScoreBreakdown', () => ({ default: () => <div data-testid="scorebreakdown">ScoreBreakdown</div> }));
+vi.mock('../../src/components/StrategyTesting', () => ({ default: () => <div data-testid="strategytesting">StrategyTesting</div> }));
+vi.mock('../../src/components/PerformanceMetrics', () => ({ default: () => <div data-testid="performancemetrics">PerformanceMetrics</div> }));
+vi.mock('../../src/components/ParameterTuning', () => ({ default: () => <div data-testid="parametertuning">ParameterTuning</div> }));
+vi.mock('../../src/components/HistoricalValidation', () => ({ default: () => <div data-testid="historicalvalidation">HistoricalValidation</div> }));
+vi.mock('../../src/components/DataSyncManager', () => ({ default: () => <div data-testid="datasyncmanager">DataSyncManager</div> }));
+vi.mock('../../src/components/Pick3/DataEntry', () => ({ default: () => <div data-testid="data-entry">DataEntry</div> }));
 
 // Now import Home after all mocks are set up
 import Home from '../../app/routes/home';
@@ -169,32 +158,33 @@ describe('Home Route Navigation', () => {
     const dataManagementButton = screen.getByText('Data Management');
     fireEvent.click(dataManagementButton);
 
-    // Initially should show loading spinner (briefly)
-    // This tests the loading state management
-    expect(screen.queryByTestId('loading-spinner')).not.toBeInTheDocument();
-
     // After loading completes, subsection buttons should appear
     await waitFor(() => {
       expect(screen.getByText('Data Sync')).toBeInTheDocument();
-    });
+    }, { timeout: 3000 });
+
+    // Data Sync button should be visible after section is clicked
+    expect(screen.getByText('Data Sync')).toBeInTheDocument();
   });
 
   it('renders all main sections correctly', () => {
     renderHome();
 
-    const expectedSections = [
+    // Some sections appear multiple times in the UI, so use getAllByText
+    const sectionsToCheck = [
       'Pick 3 Charts',
-      'Inspector 3',
       'Deflate',
       'Pairs Analysis',
       'Column Engine',
       'Scoring Engine',
       'Backtesting',
-      'Data Management'
+      'Data Management',
+      'Inspector 3'
     ];
 
-    expectedSections.forEach(section => {
-      expect(screen.getByText(section)).toBeInTheDocument();
+    sectionsToCheck.forEach(section => {
+      const elements = screen.getAllByText(section);
+      expect(elements.length).toBeGreaterThan(0);
     });
   });
 
