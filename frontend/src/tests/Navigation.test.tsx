@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
-import DataEntry from '../src/components/Pick3/DataEntry';
+import { BrowserRouter } from 'react-router';
+import DataEntry from '../components/Pick3/DataEntry';
 
 // Mock the services
-vi.mock('../src/services/Pick3DataManager', () => ({
+vi.mock('../services/Pick3DataManager', () => ({
   pick3DataManager: {
     addDraws: vi.fn(),
     clearData: vi.fn(),
@@ -12,20 +12,20 @@ vi.mock('../src/services/Pick3DataManager', () => ({
   }
 }));
 
-vi.mock('../src/services/Pick3DataScraper', () => ({
+vi.mock('../services/Pick3DataScraper', () => ({
   Pick3DataScraper: vi.fn().mockImplementation(() => ({
     populateSampleIndianaData: vi.fn().mockResolvedValue([])
   }))
 }));
 
-vi.mock('../src/services/api', () => ({
+vi.mock('../services/api', () => ({
   AnalyticsService: {
     getCacheStats: vi.fn(() => new Map()),
     clearCache: vi.fn()
   }
 }));
 
-vi.mock('../src/caching/CacheManager', () => ({
+vi.mock('../caching/CacheManager', () => ({
   CacheManager: vi.fn().mockImplementation(() => ({
     clearAll: vi.fn()
   }))

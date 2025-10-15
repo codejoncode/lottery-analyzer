@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { LotteryAPIService } from '../LotteryAPIService';
 
 // Mock fetch
@@ -58,7 +58,7 @@ describe('LotteryAPIService', () => {
         },
       ];
 
-      (global.fetch as any).mockResolvedValueOnce({
+      mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => mockData,
       });
@@ -70,11 +70,11 @@ describe('LotteryAPIService', () => {
       const result = await service.fetchRecentDraws('powerball', 1);
 
       expect(result).toEqual(mockData);
-      expect(global.fetch).toHaveBeenCalledTimes(1);
+      expect(mockFetch).toHaveBeenCalledTimes(1);
     });
 
     it('should handle API errors gracefully', async () => {
-      (global.fetch as any).mockResolvedValueOnce({
+      mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
         statusText: 'Internal Server Error',
@@ -87,7 +87,7 @@ describe('LotteryAPIService', () => {
 
     it('should retry on failure', async () => {
       // Fail first two times, succeed on third
-      (global.fetch as any)
+      mockFetch
         .mockResolvedValueOnce({ ok: false, status: 500, statusText: 'Error' })
         .mockResolvedValueOnce({ ok: false, status: 500, statusText: 'Error' })
         .mockResolvedValueOnce({
@@ -101,7 +101,7 @@ describe('LotteryAPIService', () => {
       const result = await service.fetchRecentDraws('pick3', 1);
       
       expect(result).toHaveLength(1);
-      expect(global.fetch).toHaveBeenCalledTimes(3);
+      expect(mockFetch).toHaveBeenCalledTimes(3);
     });
   });
 
@@ -114,7 +114,7 @@ describe('LotteryAPIService', () => {
         },
       ];
 
-      (global.fetch as any).mockResolvedValueOnce({
+      mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => mockData,
       });
@@ -138,7 +138,7 @@ describe('LotteryAPIService', () => {
         numbers: [1, 2, 3],
       }];
 
-      (global.fetch as any).mockResolvedValue({
+      mockFetch.mockResolvedValue({
         ok: true,
         json: async () => mockData,
       });
@@ -152,7 +152,7 @@ describe('LotteryAPIService', () => {
       // Fetch again should make new request
       await service.fetchRecentDraws('pick3', 1);
       
-      expect(global.fetch).toHaveBeenCalledTimes(2);
+      expect(mockFetch).toHaveBeenCalledTimes(2);
     });
   });
 

@@ -14,7 +14,6 @@ const Pick3GridAnalysis: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [grids, setGrids] = useState<Pick3Grid[]>([]);
   const [selectedDraws, setSelectedDraws] = useState(14);
-  const [showPreviousStates, setShowPreviousStates] = useState(false);
   const [savedGrids, setSavedGrids] = useState<Pick3Grid[] | null>(null);
 
   useEffect(() => {

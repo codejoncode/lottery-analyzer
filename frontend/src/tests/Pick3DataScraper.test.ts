@@ -196,7 +196,6 @@ describe('Pick3DataScraper', () => {
         { date: '2025-01-01', midday: '123', evening: '456', timestamp: Date.now() }
       ];
 
-      const initialCount = pick3DataManager.getDataStats().totalDraws;
       pick3DataManager.addDraws(testDraws);
       const afterFirstAdd = pick3DataManager.getDataStats().totalDraws;
 

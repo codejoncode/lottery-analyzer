@@ -25,7 +25,7 @@ interface CacheEntry<T> {
 }
 
 export class LotteryAPIService {
-  private cache = new Map<string, CacheEntry<any>>();
+  private cache = new Map<string, CacheEntry<unknown>>();
   private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
   private readonly MAX_CACHE_SIZE = 100;
   private config: LotteryConfig;
@@ -83,7 +83,7 @@ export class LotteryAPIService {
 
   private async makeRequest<T>(
     endpoint: string,
-    options: { params?: Record<string, any> } = {}
+    options: { params?: Record<string, string | number> } = {}
   ): Promise<T> {
     const url = new URL(endpoint, this.config.baseURL);
     
@@ -137,7 +137,7 @@ export class LotteryAPIService {
       return null;
     }
 
-    return entry.data;
+    return entry.data as T;
   }
 
   private setCache<T>(key: string, data: T, ttl: number = this.CACHE_TTL): void {

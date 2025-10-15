@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { pick3Analyzer } from '../utils/pick3Analyzer';
 import { pick3DataManager } from '../services/Pick3DataManager';
 
 interface Prediction {
@@ -16,12 +15,28 @@ interface Prediction {
   dueFactor: number;
 }
 
+interface HistoricalDraw {
+  numbers?: number[];
+  midday?: string;
+  evening?: string;
+  date?: string;
+}
+
+interface PatternAnalysis {
+  combination: string;
+  frequency: number;
+  lastSeen: number;
+  hotStreak: number;
+  dueFactor: number;
+  patternType: string;
+}
+
 const Top20Predictions: React.FC = () => {
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<Prediction | null>(null);
   const [timeframe, setTimeframe] = useState<'next' | 'week' | 'month'>('next');
-  const [historicalData, setHistoricalData] = useState<any[]>([]);
+  const [historicalData, setHistoricalData] = useState<HistoricalDraw[]>([]);
 
   // Load historical data on component mount
   useEffect(() => {
@@ -51,7 +66,7 @@ const Top20Predictions: React.FC = () => {
     try {
       // Analyze historical patterns and frequencies
       const patternAnalysis = analyzeHistoricalPatterns();
-      const scoredPredictions: Prediction[] = patternAnalysis.map((pattern, index) => {
+      const scoredPredictions: Prediction[] = patternAnalysis.map((pattern) => {
         const score = calculatePredictionScore(pattern);
         const confidence = calculateConfidence(pattern, historicalData.length);
         const trend = determineTrend(pattern);
@@ -94,8 +109,8 @@ const Top20Predictions: React.FC = () => {
     setLoading(false);
   };
 
-  const analyzeHistoricalPatterns = () => {
-    const patterns: any[] = [];
+  const analyzeHistoricalPatterns = (): PatternAnalysis[] => {
+    const patterns: PatternAnalysis[] = [];
     const combinationFrequency = new Map<string, number>();
     const lastSeenMap = new Map<string, number>();
     const hotStreaks = new Map<string, number>();
@@ -171,7 +186,7 @@ const Top20Predictions: React.FC = () => {
     return 'Mixed';
   };
 
-  const calculatePredictionScore = (pattern: any): number => {
+  const calculatePredictionScore = (pattern: PatternAnalysis): number => {
     let score = 0;
 
     // Base score from due factor (higher = more due)
@@ -200,7 +215,7 @@ const Top20Predictions: React.FC = () => {
     return Math.min(score, 0.95); // Cap at 95%
   };
 
-  const calculateConfidence = (pattern: any, totalDraws: number): number => {
+  const calculateConfidence = (pattern: PatternAnalysis, totalDraws: number): number => {
     // Confidence based on historical data size and pattern consistency
     const baseConfidence = Math.min(totalDraws / 1000, 1) * 100;
     const patternConsistency = pattern.frequency / Math.max(pattern.lastSeen / 100, 1);
@@ -208,13 +223,13 @@ const Top20Predictions: React.FC = () => {
     return Math.min(baseConfidence * (0.5 + patternConsistency * 0.5), 95);
   };
 
-  const determineTrend = (pattern: any): 'up' | 'down' | 'stable' => {
+  const determineTrend = (pattern: PatternAnalysis): 'up' | 'down' | 'stable' => {
     if (pattern.hotStreak > 2) return 'up';
     if (pattern.lastSeen > 200) return 'down';
     return 'stable';
   };
 
-  const generatePredictedDraws = (pattern: any, timeframe: string): string[] => {
+  const generatePredictedDraws = (pattern: PatternAnalysis, timeframe: string): string[] => {
     const drawCount = timeframe === 'next' ? 1 : timeframe === 'week' ? 7 : 30;
     const predictedDraws = [];
 

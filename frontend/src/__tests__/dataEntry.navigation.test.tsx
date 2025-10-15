@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
+import { describe, it, expect } from 'vitest';
 import DataEntryPage from '../../../frontend/app/routes/data-entry';
 
 // Note: We import the route default export directly - in the app build this is used by the router
